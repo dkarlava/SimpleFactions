@@ -14,20 +14,19 @@ import java.util.UUID;
 public record Create (PluginConfig config, DataBaseHelper connection) implements BaseFactionCommand {
     @Override
     public void execute(CommandSender sender, String[] args) throws SQLException {
-        if (!(sender instanceof Player)) {
+        if (!(sender instanceof Player player)) {
             sender.sendMessage(Component.text("Only players can execute this command!"));
+            return;
         }
         if (args.length != 1) {
             sender.sendMessage("Usage: /f create <factionName>");
             return;
         }
 
-        assert sender instanceof Player;
-        Player player = (Player) sender;
         UUID playerId = player.getUniqueId();
 
         if (connection.selectFactionPlayerIsIn(playerId) != null) {
-            sender.sendMessage(Component.text("You must leave your current faction before you can create a new one").color(NamedTextColor.RED));
+            sender.sendMessage(Component.text("You must leave your current faction before you can create a new one.").color(NamedTextColor.RED));
             return;
         }
 

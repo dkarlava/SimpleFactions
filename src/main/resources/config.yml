@@ -5,3 +5,6 @@ faction-name-regex: "^[a-zA-Z0-9]+$"
 faction-name-length-min: 3
 # Defaults for 15 if removed or value is >= 100
 faction-name-length-max: 15
+
+# Unit is in minutes. Defaults to 5 if removed or less than
+faction-disband-auto-timeout: 5

@@ -1,6 +1,8 @@
 package daveiiii.simpleFactions.commands;
 
 import daveiiii.simpleFactions.data.DataBaseHelper;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -8,10 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import types.PluginConfig;
 import util.BaseFactionCommand;
 import types.PossibleFactionCommands;
-import util.factionCommands.Create;
-import util.factionCommands.Leave;
-import util.factionCommands.ListCommand;
-import util.factionCommands.Show;
+import util.factionCommands.*;
 
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -30,6 +29,7 @@ public class FactionsCommandManager implements CommandExecutor {
         commandMap.put(PossibleFactionCommands.List, new ListCommand(config, connection));
         commandMap.put(PossibleFactionCommands.Leave, new Leave(config, connection));
         commandMap.put(PossibleFactionCommands.Show, new Show(config, connection));
+        commandMap.put(PossibleFactionCommands.Disband, new Disband(config, connection));
     }
 
     @Override
@@ -43,14 +43,14 @@ public class FactionsCommandManager implements CommandExecutor {
         try {
             PossibleFactionCommands possibleFactionCommand = PossibleFactionCommands.getValue(command);
             if (!commandMap.containsKey(possibleFactionCommand)) {
-                sender.sendMessage("Unknown command. Use /f <command>");
+                sender.sendMessage(Component.text(String.format("Internal Error: Command %s not found.", possibleFactionCommand.getCommand())).color(NamedTextColor.RED));
                 return true;
             }
 
             commandMap.get(possibleFactionCommand).execute(sender, Arrays.copyOfRange(args, 1, args.length));
 
         } catch (IllegalArgumentException e) {
-            sender.sendMessage("Unknown command. Use /f <command>");
+            sender.sendMessage(Component.text(String.format("Unknown command \"%s\". Use /f <command>", command)).color(NamedTextColor.RED));
             return true;
         } catch (SQLException e) {
             logger.severe(e.getMessage());

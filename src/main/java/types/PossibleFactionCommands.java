@@ -5,7 +5,8 @@ public enum PossibleFactionCommands {
     Join("join"),
     List("list"),
     Leave("leave"),
-    Show("show");
+    Show("show"),
+    Disband("disband");
     private final String command;
     PossibleFactionCommands (String command) {
         this.command = command;

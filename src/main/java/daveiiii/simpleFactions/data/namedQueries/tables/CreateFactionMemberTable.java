@@ -1,4 +1,4 @@
-package daveiiii.simpleFactions.data.namedQueries.factionMember.insert;
+package daveiiii.simpleFactions.data.namedQueries.tables;
 
 import java.sql.Connection;
 import java.sql.SQLException;
