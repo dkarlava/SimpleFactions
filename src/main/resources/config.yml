@@ -1,0 +1,53 @@
+# Defaults to ^[a-zA-Z0-9]+$ if removed
+faction-name-regex: "^[a-zA-Z0-9]+$"
+
+# Defaults to 3 if removed or value is <= 0
+faction-name-length-min: 3
+# Defaults for 15 if removed or value is >= 100
+faction-name-length-max: 15
+
+# Unit is in minutes. Defaults to 5 if removed or less than 0
+faction-disband-auto-timeout: 5
+
+# Unit is in minutes. Defaults to 5 if removed or less than 0
+faction-invite-auto-timeout: 5
+
+# Unit is in minutes. Interval to increase all online players power. Defaults to 15 if removed or less than 0
+faction-power-increase-interval: 15
+
+# Amount of power to increase everytime the interval is met. Defaults to 1 if removed or less than 0
+faction-power-increase-amount: 1
+
+# Max power each player can have. Defaults to 10 if removed or less than 0
+faction-max-power-per-player: 10
+
+# Minimum power each player can have. Defaults to -10 if removed or greater than max power
+faction-min-power-per-player: -10
+
+# How much power it costs to claim one chunk. Defaults to 1 if removed or less than 0
+faction-land-claim-cost: 1
+
+# How much power a players loses on each death. Defaults to 4 if removed or less than 0
+faction-death-power-lose: 4
+
+# Faction claim protections. There is no config here, just info
+#  BlockBreakEvent: Player breaking blocks -> TRUE
+#  BlockPlaceEvent: Player placing blocks -> TRUE
+#  PlayerInteractEvent: Clicking blocks (buttons, levers, doors, trapdoors, pressure plates, etc.) -> TRUE
+#  PlayerInteractEntityEvent: Right-clicking entities (like item frames, armor stands) -> TRUE
+#  InventoryOpenEvent: Opening chests, barrels, shulker boxes -> FALSE
+#  InventoryClickEvent: Interacting with items in inventories (inside claimed containers) -> FALSE
+#  EntityDamageByEntityEvent: Attacking mobs or other players inside another faction’s territory -> FALSE
+#  EntityDamageEvent: For environmental damage you might want to block (like TNT or lava) -> TRUE
+#  EntityExplodeEvent: TNT, Creepers, beds in the Nether, etc -> FALSE
+#  BlockExplodeEvent: Fireballs, TNT, etc. -> FALSE
+#  BlockFromToEvent: Water/lava flowing into the claim -> FALSE
+#  BlockIgniteEvent: Fire spreading or being started -> TRUE
+#  BlockBurnEvent: Blocks destroyed by fire -> FALSE
+#  BlockPhysicsEvent: Physics updates (like sand falling) -> FALSE
+#  PistonExtendEvent: Piston moving blocks into claims -> FALSE
+#  PistonRetractEvent: Piston moving blocks into claims -> FALSE
+#  PlayerBucketEmptyEvent: Water/lava buckets -> TRUE
+#  PlayerBucketFillEvent: Water/lava buckets -> FALSE
+#  PlayerDropItemEvent: Optional, prevent dropping items in claims -> FALSE
+#  PlayerPickupItemEvent: Optional, stop picking up items on certain blocks -> FALSE
