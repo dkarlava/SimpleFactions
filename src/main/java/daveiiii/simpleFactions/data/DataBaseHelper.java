@@ -4,6 +4,7 @@ import daveiiii.simpleFactions.data.namedQueries.faction.select.SelectFactionByN
 import daveiiii.simpleFactions.data.namedQueries.faction.select.SelectFactionByPlayerId;
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.create.CreateFactionChunk;
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.create.CreateFactionSafeZoneWarZoneChunk;
+import daveiiii.simpleFactions.data.namedQueries.factionChunk.delete.DeleteFactionChunk;
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.select.SelectFactionUsingChunk;
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.select.SelectNearbyChunks;
 import daveiiii.simpleFactions.data.namedQueries.factionDisband.delete.DeleteFactionDisband;
@@ -167,6 +168,10 @@ public class DataBaseHelper {
 
     public FactionChunk selectFactionUsingChunk(int x, int z) throws SQLException {
         return SelectFactionUsingChunk.run(connection, x, z);
+    }
+
+    public void deleteFactionChunk (int x, int z) throws SQLException {
+        DeleteFactionChunk.run(connection, x, z);
     }
 
     public void close () throws SQLException {

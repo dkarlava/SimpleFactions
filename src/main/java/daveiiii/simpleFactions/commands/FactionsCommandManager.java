@@ -36,6 +36,7 @@ public class FactionsCommandManager implements CommandExecutor {
         commandMap.put(PossibleFactionCommands.Power, new Power(config, connection));
         commandMap.put(PossibleFactionCommands.Map, new MapCommand(config, connection));
         commandMap.put(PossibleFactionCommands.Claim, new Claim(config, connection));
+        commandMap.put(PossibleFactionCommands.Unclaim, new Unclaim(config, connection));
     }
 
     @Override

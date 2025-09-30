@@ -19,6 +19,11 @@ public record Claim(PluginConfig config, DataBaseHelper connection) implements B
             sender.sendMessage(Component.text("Only players can execute this command!"));
             return;
         }
+
+        Chunk chunk = player.getChunk();
+        int x = chunk.getX();
+        int z = chunk.getZ();
+
         // TODO: support /f claim radius
         // Special handling for claiming land for warzone/ safezone
         if (args.length == 1) {
@@ -27,11 +32,12 @@ public record Claim(PluginConfig config, DataBaseHelper connection) implements B
                 return;
             }
             String safeZoneWarZoneName = args[0];
-            Chunk chunk = player.getChunk();
             if  (safeZoneWarZoneName.equalsIgnoreCase("safezone")) {
-                connection.createFactionSafeZoneChunk(chunk.getX(), chunk.getZ());
+                connection.createFactionSafeZoneChunk(x, z);
+                player.sendMessage(Component.text("You claimed land for the safe zone!", NamedTextColor.GOLD));
             } else if (safeZoneWarZoneName.equalsIgnoreCase("warzone")) {
-                connection.createFactionWarZoneChunk(chunk.getX(), chunk.getZ());
+                connection.createFactionWarZoneChunk(x, z);
+                player.sendMessage(Component.text("You claimed land for the safe zone!", NamedTextColor.GOLD));
             }
             return;
         }
@@ -48,9 +54,7 @@ public record Claim(PluginConfig config, DataBaseHelper connection) implements B
             return;
         }
         // todo: ensure total power of faction is greater than the amount of currently claimed land
-        Chunk chunk = player.getChunk();
-
-        connection.createFactionChunk(factionPlayer.factionId, chunk.getX(), chunk.getZ());
+        connection.createFactionChunk(factionPlayer.factionId, x, z);
         BroadcastMessageToFactionMembers.run(connection, factionPlayer.factionId, Component.text(String.format("%s just claimed land for the faction!", player.getName()), NamedTextColor.GREEN));
     }
 }
