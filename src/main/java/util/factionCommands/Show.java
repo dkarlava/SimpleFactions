@@ -36,11 +36,21 @@ public record Show (PluginConfig config, DataBaseHelper connection) implements B
         Faction factionDetails = connection.selectFactionByPlayerId(playerId);
 
         if (factionDetails == null) {
-            sender.sendMessage(Component.text("That faction does not exist!"));
+            sender.sendMessage(Component.text("That faction does not exist!",  NamedTextColor.RED));
             return;
         }
 
+        int totalPower = 0;
         List<FactionPlayer> factionPlayers = connection.selectAllFactionMembersUsingFactionId(factionDetails.id);
+        if (factionPlayers == null) {
+            sender.sendMessage(Component.text(String.format("Faction %s does not have any members", factionDetails.name),  NamedTextColor.RED));
+            return;
+        }
+
+        for (FactionPlayer factionPlayer : factionPlayers) {
+            totalPower = totalPower + factionPlayer.power;
+        }
+
         FactionPlayer factionOwner = factionPlayers.stream()
             .filter(fP -> fP.rank == PlayerRank.Owner)
             .findFirst()
@@ -70,6 +80,8 @@ public record Show (PluginConfig config, DataBaseHelper connection) implements B
             .map(fP -> Objects.requireNonNull(Bukkit.getPlayer(fP.playerId)).getName()) // extract the names
             .collect(Collectors.joining(", "));
 
+        int numberOfAllClaims = connection.selectAllFactionClaims(factionDetails.id).size();
+        int maxPossiblePower = factionPlayers.size() * config.factionMaxPowerPerPlayer;
 
         // TODO: format this make it centered if possible, add some nice headers
         player.sendMessage(Component.text("-----------------\n", NamedTextColor.GOLD)
@@ -78,6 +90,7 @@ public record Show (PluginConfig config, DataBaseHelper connection) implements B
             .append(Component.text(String.format("Co-Owners: %s\n", factionCoOwnersAsString), NamedTextColor.GOLD))
             .append(Component.text(String.format("Elders: %s\n", factionEldersAsString), NamedTextColor.GOLD))
             .append(Component.text(String.format("Members: %s\n", factionMembersAsString), NamedTextColor.GOLD))
+            .append(Component.text(String.format("Power / Land / Max Power: %d / %d / %d\n", maxPossiblePower, numberOfAllClaims, totalPower), NamedTextColor.GOLD))
         );
     }
 }

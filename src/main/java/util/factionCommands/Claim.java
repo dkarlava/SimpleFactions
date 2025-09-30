@@ -74,7 +74,7 @@ public record Claim(PluginConfig config, DataBaseHelper connection) implements B
         }
 
         int numberOfAllClaims = connection.selectAllFactionClaims(factionPlayer.factionId).size();
-        if (totalPower - numberOfAllClaims > config.factionLandClaimCost) {
+        if (totalPower - numberOfAllClaims < config.factionLandClaimCost) {
             player.sendMessage(Component.text("Your faction does not have enough power to claim this land", NamedTextColor.RED));
             return;
         }
