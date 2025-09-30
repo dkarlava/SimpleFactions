@@ -9,10 +9,9 @@ import org.bukkit.entity.Player;
 import types.FactionPlayer;
 import types.PluginConfig;
 import util.BaseFactionCommand;
+import util.other.BroadcastMessageToFactionMembers;
 import util.other.CompareRanks;
-
 import java.sql.SQLException;
-import java.util.List;
 import java.util.UUID;
 
 public record Kick(PluginConfig config, DataBaseHelper connection) implements BaseFactionCommand {
@@ -57,13 +56,7 @@ public record Kick(PluginConfig config, DataBaseHelper connection) implements Ba
         if (CompareRanks.compareRanks(factionPlayer.rank, otherFactionPlayer.rank)) {
             connection.deleteFactionMember(otherPlayerId);
             otherPlayer.sendMessage(Component.text("You have been kicked from the faction!", NamedTextColor.RED));
-            List<FactionPlayer> otherMembers = connection.selectAllFactionMembersUsingFactionId(factionPlayer.factionId);
-            for (FactionPlayer otherFactionMember : otherMembers) {
-                Player otherMember = Bukkit.getPlayer(otherFactionMember.playerId);
-                if (otherMember != null) {
-                    otherMember.sendMessage(Component.text(String.format("%s has been kicked from the faction!", otherPlayerName), NamedTextColor.RED));
-                }
-            }
+            BroadcastMessageToFactionMembers.run(connection, factionPlayer.factionId, Component.text(String.format("%s has been kicked from the faction!", otherPlayerName), NamedTextColor.RED));
         } else {
             sender.sendMessage(Component.text("You do not have the power to kick that player.", NamedTextColor.RED));
         }
