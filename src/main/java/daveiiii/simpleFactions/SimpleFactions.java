@@ -15,10 +15,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.hanging.HangingBreakEvent;
-import org.bukkit.event.player.PlayerBucketEmptyEvent;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -26,6 +23,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import types.FactionChunk;
 import types.PluginConfig;
 import util.factionCommands.FactionCommandTabCompleter;
+import util.factionCommands.MapCommand;
 import util.other.FactionClaimProtect;
 import java.sql.SQLException;
 import java.util.Iterator;
@@ -325,6 +323,18 @@ public final class SimpleFactions extends JavaPlugin implements Listener {
         }
         db.updatePlayerPower(playerId, currentPower);
         player.sendMessage(Component.text(String.format("Your new power is %d/%d", currentPower, config.factionMaxPowerPerPlayer), NamedTextColor.RED));
+    }
+
+    @EventHandler
+    public void onPlayerMove(PlayerMoveEvent event) throws SQLException {
+        Player player = event.getPlayer();
+
+        Chunk fromChunk = event.getFrom().getChunk();
+        Chunk toChunk = event.getTo().getChunk();
+
+        if (!fromChunk.equals(toChunk) && db.selectPlayerDataAutoMap(player.getUniqueId())) {
+            MapCommand.displayMap(db, player, toChunk);
+        }
     }
 
     private void initializeRepeatingTasks () {

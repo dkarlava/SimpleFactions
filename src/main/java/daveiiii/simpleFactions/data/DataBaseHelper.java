@@ -20,7 +20,9 @@ import daveiiii.simpleFactions.data.namedQueries.factionMember.insert.InsertFact
 import daveiiii.simpleFactions.data.namedQueries.factionMember.select.SelectAllFactionMembersUsingFactionId;
 import daveiiii.simpleFactions.data.namedQueries.playerData.insert.InsertPlayerData;
 import daveiiii.simpleFactions.data.namedQueries.playerData.select.SelectPlayerData;
+import daveiiii.simpleFactions.data.namedQueries.playerData.select.SelectPlayerDataAutoMap;
 import daveiiii.simpleFactions.data.namedQueries.playerData.update.UpdateIncreasePowerForAllOnlinePlayers;
+import daveiiii.simpleFactions.data.namedQueries.playerData.update.UpdatePlayerDataAutoMap;
 import daveiiii.simpleFactions.data.namedQueries.playerData.update.UpdatePlayerPower;
 import daveiiii.simpleFactions.data.namedQueries.tables.*;
 import daveiiii.simpleFactions.data.namedQueries.faction.select.SelectTotalFactionPageNumber;
@@ -69,6 +71,8 @@ public class DataBaseHelper {
         logger.info("CreatePlayerData created");
         CreateFactionChunkTable.run(connection);
         logger.info("CreateFactionChunkTable created");
+        AlterCreatePlayerData.run(connection);
+        logger.info("AlterCreatePlayerData altered");
         logger.info("========== DATABASE INITIALIZED ==========");
     }
 
@@ -182,6 +186,14 @@ public class DataBaseHelper {
 
     public List<FactionChunk> selectAllFactionClaims (String factionId) throws SQLException {
         return SelectAllFactionClaims.run(connection, factionId);
+    }
+
+    public void updatePlayerDataAutoMap (UUID playerId, boolean autoMap) throws SQLException {
+        UpdatePlayerDataAutoMap.run(connection, playerId, autoMap);
+    }
+
+    public boolean selectPlayerDataAutoMap (UUID playerId) throws SQLException {
+        return SelectPlayerDataAutoMap.run(connection, playerId);
     }
 
     public void close () throws SQLException {
