@@ -3,6 +3,7 @@ import daveiiii.simpleFactions.data.namedQueries.faction.insert.InsertFaction;
 import daveiiii.simpleFactions.data.namedQueries.faction.select.SelectFactionByName;
 import daveiiii.simpleFactions.data.namedQueries.faction.select.SelectFactionByPlayerId;
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.create.CreateFactionChunk;
+import daveiiii.simpleFactions.data.namedQueries.factionChunk.create.CreateFactionSafeZoneWarZoneChunk;
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.select.SelectFactionUsingChunk;
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.select.SelectNearbyChunks;
 import daveiiii.simpleFactions.data.namedQueries.factionDisband.delete.DeleteFactionDisband;
@@ -150,6 +151,14 @@ public class DataBaseHelper {
 
     public void createFactionChunk (String factionId, int x, int z) throws SQLException {
         CreateFactionChunk.run(connection, factionId, x, z);
+    }
+
+    public void createFactionSafeZoneChunk (int x, int z) throws SQLException {
+        CreateFactionSafeZoneWarZoneChunk.run(connection, "safezone", x, z);
+    }
+
+    public void createFactionWarZoneChunk (int x, int z) throws SQLException {
+        CreateFactionSafeZoneWarZoneChunk.run(connection, "warzone", x, z);
     }
 
     public Map<String, FactionChunk> selectNearbyChunks(int minX, int maxX, int minZ, int maxZ) throws SQLException {

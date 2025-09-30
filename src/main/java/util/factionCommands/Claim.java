@@ -10,7 +10,6 @@ import types.FactionPlayer;
 import types.PluginConfig;
 import util.BaseFactionCommand;
 import util.other.BroadcastMessageToFactionMembers;
-
 import java.sql.SQLException;
 
 public record Claim(PluginConfig config, DataBaseHelper connection) implements BaseFactionCommand {
@@ -20,6 +19,23 @@ public record Claim(PluginConfig config, DataBaseHelper connection) implements B
             sender.sendMessage(Component.text("Only players can execute this command!"));
             return;
         }
+        // TODO: support /f claim radius
+        // Special handling for claiming land for warzone/ safezone
+        if (args.length == 1) {
+            if (!player.isOp()) {
+                // only oped players can claim for warzone/ safezone
+                return;
+            }
+            String safeZoneWarZoneName = args[0];
+            Chunk chunk = player.getChunk();
+            if  (safeZoneWarZoneName.equalsIgnoreCase("safezone")) {
+                connection.createFactionSafeZoneChunk(chunk.getX(), chunk.getZ());
+            } else if (safeZoneWarZoneName.equalsIgnoreCase("warzone")) {
+                connection.createFactionWarZoneChunk(chunk.getX(), chunk.getZ());
+            }
+            return;
+        }
+
         // TODO: support /f claim radius
         if (args.length != 0) {
             sender.sendMessage("Usage: /f claim");
