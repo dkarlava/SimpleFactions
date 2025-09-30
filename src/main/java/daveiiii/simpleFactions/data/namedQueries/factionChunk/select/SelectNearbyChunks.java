@@ -13,12 +13,12 @@ import java.util.Map;
 public class SelectNearbyChunks extends BaseQuery {
     public static Map<String, FactionChunk> run (Connection connection, int minX, int maxX, int minZ, int maxZ) throws SQLException {
         // TODO: codebase wide refactor to use the triple quotes syntax
-        String[] queryItems = {
-                "SELECT faction_id, x, z",
-                "FROM faction_chunk",
-                "WHERE x >= ? AND x <= ? AND z >= ? AND z <= ?",
-        };
-        String query = BaseQuery.createQuery(queryItems);
+        String query = """
+            SELECT fc.faction_id, fc.x, fc.z, f.name
+            FROM faction_chunk fc
+            JOIN faction f ON fc.faction_id = f.id
+            WHERE x >= ? AND x <= ? AND z >= ? AND z <= ?
+        """;
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, minX);
             stmt.setInt(2, maxX);
@@ -29,7 +29,7 @@ public class SelectNearbyChunks extends BaseQuery {
                 while (rs.next()) {
                     int x = rs.getInt("x");
                     int z = rs.getInt("z");
-                    ret.put(String.format("(%d,%d)", z, x), new FactionChunk(rs.getString("faction_id"), x, z));
+                    ret.put(String.format("(%d,%d)", z, x), new FactionChunk(rs.getString("faction_id"), x, z, rs.getString("name")));
                 }
                 return ret;
             }
