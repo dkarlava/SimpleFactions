@@ -46,18 +46,27 @@ public record Invite (PluginConfig config, DataBaseHelper connection) implements
             sender.sendMessage(Component.text(String.format("%s not found.", otherPlayerName), NamedTextColor.RED));
             return;
         }
+
+        UUID otherPlayerId = otherPlayer.getUniqueId();
+
         Faction factionDetails = connection.selectFactionPlayerIsIn(playerId);
         if (factionDetails == null) {
             sender.sendMessage(Component.text(String.format("Internal Error. Could not get faction details for faction id %s", factionPlayer.factionId), NamedTextColor.RED));
             return;
         }
 
-        // TODO: Need to check for the following validations
-        // If the receiving player already has an invite to the faction just update the timeout timestamp
-        // TODO: Need to add config variable for invite timeout
-        connection.insertPlayerInvite(factionPlayer.factionId, otherPlayer.getUniqueId());
+        // TODO: Need some sort of cooldown to avoid players spamming players
+        if (connection.selectFactionInvitePrimed(factionPlayer.factionId, otherPlayerId) == null) {
+            connection.insertPlayerInvite(factionPlayer.factionId, otherPlayer.getUniqueId());
+        } else {
+            connection.updatePlayerInviteTimestamp(factionPlayer.factionId, otherPlayer.getUniqueId());
+        }
 
-        otherPlayer.sendMessage(Component.text(String.format("%s has invited you to join %s. The invite will be valid for the next %d minutes.", player.getName(), factionDetails.name, 5), NamedTextColor.GOLD));
+        otherPlayer.sendMessage(
+            Component.text(String.format("%s has invited you to join %s. The invite will be valid for the next %d minutes. Type ", player.getName(), factionDetails.name, config.factionInviteAutoTimeout), NamedTextColor.GOLD)
+                .append(Component.text(String.format("/f join %s", factionDetails.name), NamedTextColor.GREEN))
+                .append(Component.text(" to accept the invitation", NamedTextColor.GOLD))
+        );
         sender.sendMessage(Component.text(String.format("%s was invited.", otherPlayerName), NamedTextColor.GOLD));
     }
 }

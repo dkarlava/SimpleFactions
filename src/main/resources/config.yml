@@ -6,5 +6,8 @@ faction-name-length-min: 3
 # Defaults for 15 if removed or value is >= 100
 faction-name-length-max: 15
 
-# Unit is in minutes. Defaults to 5 if removed or less than
+# Unit is in minutes. Defaults to 5 if removed or less than 0
 faction-disband-auto-timeout: 5
+
+# Unit is in minutes. Defaults to 5 if removed or less than 0
+faction-invite-auto-timeout: 5

@@ -23,7 +23,8 @@ public class SelectFactionPlayerIsIn extends BaseQuery {
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 if (resultSet.next()) {
                     String name  = resultSet.getString("name");
-                    return new Faction(name);
+                    String id = resultSet.getString("id");
+                    return new Faction(name, id);
                 } else {
                     return null;
                 }

@@ -5,7 +5,12 @@ import daveiiii.simpleFactions.data.namedQueries.factionDisband.delete.DeleteFac
 import daveiiii.simpleFactions.data.namedQueries.factionDisband.insert.InsertFactionDisband;
 import daveiiii.simpleFactions.data.namedQueries.factionDisband.select.SelectFactionDisbandedPrimed;
 import daveiiii.simpleFactions.data.namedQueries.factionDisband.update.UpdateFactionDisbandTimestampAndPlayerId;
+import daveiiii.simpleFactions.data.namedQueries.factionInvite.delete.DeleteFactionInvite;
 import daveiiii.simpleFactions.data.namedQueries.factionInvite.insert.InsertPlayerInvite;
+import daveiiii.simpleFactions.data.namedQueries.factionInvite.select.SelectFactionInvitePrimed;
+import daveiiii.simpleFactions.data.namedQueries.factionInvite.update.UpdatePlayerInviteTimestamp;
+import daveiiii.simpleFactions.data.namedQueries.factionMember.insert.InsertFactionMember;
+import daveiiii.simpleFactions.data.namedQueries.factionMember.select.SelectAllFactionMembersUsingFactionId;
 import daveiiii.simpleFactions.data.namedQueries.tables.CreateFactionDisbandTable;
 import daveiiii.simpleFactions.data.namedQueries.tables.CreateFactionInviteTable;
 import daveiiii.simpleFactions.data.namedQueries.tables.CreateFactionTable;
@@ -17,6 +22,7 @@ import daveiiii.simpleFactions.data.namedQueries.tables.CreateFactionMemberTable
 import daveiiii.simpleFactions.data.namedQueries.factionMember.select.SelectFactionMember;
 import types.Faction;
 import types.FactionDisband;
+import types.FactionInvite;
 import types.FactionPlayer;
 
 import java.io.File;
@@ -73,9 +79,17 @@ public class DataBaseHelper {
         return SelectFactionDisbandedPrimed.run(connection, factionId);
     }
 
-//    public FactionDisband selectFactionInvitePrimed (String factionId) throws SQLException {
-//        return SelectFactionInvitePrimed.run(connection, factionId);
-//    }
+    public FactionInvite selectFactionInvitePrimed (String factionId, UUID playerId) throws SQLException {
+        return SelectFactionInvitePrimed.run(connection, factionId, playerId);
+    }
+
+    public void updatePlayerInviteTimestamp (String factionId, UUID playerId) throws SQLException {
+        UpdatePlayerInviteTimestamp.run(connection, factionId, playerId);
+    }
+
+    public void insertFactionMember (String factionId, UUID playerId) throws SQLException {
+        InsertFactionMember.run(connection, factionId, playerId);
+    }
 
     public void insertFactionDisbandedPrimed (UUID playerId, String factionId) throws SQLException {
         InsertFactionDisband.run(connection, playerId, factionId);
@@ -83,6 +97,10 @@ public class DataBaseHelper {
 
     public void updateFactionDisbandTimestampAndPlayerId (String factionDisbandedId, UUID playerId) throws SQLException {
         UpdateFactionDisbandTimestampAndPlayerId.run(connection, factionDisbandedId, playerId);
+    }
+
+    public void deleteFactionInvite (UUID playerId, String factionId) throws SQLException {
+        DeleteFactionInvite.run(connection, playerId, factionId);
     }
 
     public void deleteFactionPlayerIsIn (UUID playerId) throws SQLException {
@@ -101,12 +119,16 @@ public class DataBaseHelper {
         return SelectTotalFactionPageNumber.run(connection);
     }
 
-    public String selectFactionByName (String factionName) throws SQLException {
+    public Faction selectFactionByName (String factionName) throws SQLException {
         return SelectFactionByName.run(connection, factionName);
     }
 
     public void insertPlayerInvite (String factionId, UUID playerId) throws SQLException {
         InsertPlayerInvite.run(connection, factionId, playerId);
+    }
+
+    public List<UUID> selectAllFactionMembersUsingFactionId (String factionId) throws SQLException {
+        return SelectAllFactionMembersUsingFactionId.run(connection, factionId);
     }
 
     public void close () throws SQLException {

@@ -13,7 +13,7 @@ import java.util.List;
 public class SelectFactionPage extends BaseQuery {
     public static List<Faction> run (Connection connection, int pageNumber) throws SQLException {
         String[] queryItems = {
-            "SELECT name",
+            "SELECT name, id",
             "FROM faction",
             "LIMIT 10",
             String.format("OFFSET %d", (pageNumber - 1) * 10),
@@ -23,7 +23,8 @@ public class SelectFactionPage extends BaseQuery {
             List<Faction> ret = new ArrayList<>();
             while (rs.next()) {
                 String name = rs.getString("name");
-                ret.add(new Faction(name));
+                String id = rs.getString("id");
+                ret.add(new Faction(name, id));
             }
             return ret;
         }

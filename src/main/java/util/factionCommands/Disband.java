@@ -43,7 +43,7 @@ public record Disband (PluginConfig config, DataBaseHelper connection) implement
         FactionDisband isDisbandedPrimed = connection.selectFactionDisbandedPrimed(factionPlayer.factionId);
 
         // Attempting to filter out every case in which the first /f disband command should either be created or reset
-        if (isDisbandedPrimed == null || !isDisbandedPrimed.playerId.equals(playerId) || System.currentTimeMillis() - isDisbandedPrimed.timestamp > config.factionDisbandAutoTimeout * 60 * 1000) {
+        if (isDisbandedPrimed == null || !isDisbandedPrimed.playerId.equals(playerId) || System.currentTimeMillis() - isDisbandedPrimed.timestamp > (long) config.factionDisbandAutoTimeout * 60 * 1000) {
             if (isDisbandedPrimed == null) {
                 connection.insertFactionDisbandedPrimed(playerId, factionPlayer.factionId);
             } else {

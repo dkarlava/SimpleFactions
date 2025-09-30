@@ -1,6 +1,7 @@
 package daveiiii.simpleFactions.data.namedQueries.faction.select;
 
 import daveiiii.simpleFactions.data.namedQueries.BaseQuery;
+import types.Faction;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -8,9 +9,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class SelectFactionByName extends BaseQuery {
-    public static String run (Connection connection, String factionName) throws SQLException {
+    public static Faction run (Connection connection, String factionName) throws SQLException {
         String[] queryItems = {
-                "SELECT id",
+                "SELECT id, name",
                 "FROM faction",
                 "WHERE name_unique = ?",
         };
@@ -21,7 +22,7 @@ public class SelectFactionByName extends BaseQuery {
                 if (!rs.next()) {
                     return null;
                 }
-                return rs.getString("id");
+                return new Faction(rs.getString("name"), rs.getString("id"));
             }
         }
     }
