@@ -6,6 +6,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Creeper;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -16,12 +18,16 @@ import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
+import types.FactionChunk;
 import types.PluginConfig;
 import util.factionCommands.FactionCommandTabCompleter;
 import util.other.FactionClaimProtect;
 import java.sql.SQLException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.logging.Logger;
@@ -46,7 +52,7 @@ public final class SimpleFactions extends JavaPlugin implements Listener {
 
         this.saveDefaultConfig();
         logger.info("SimpleFactions has been enabled! AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
-        factionClaimProtect = new FactionClaimProtect (logger);
+        factionClaimProtect = new FactionClaimProtect (logger, db);
         Objects.requireNonNull(this.getCommand("f")).setExecutor(new FactionsCommandManager(config, db, logger));
         Objects.requireNonNull(this.getCommand("f")).setTabCompleter(new FactionCommandTabCompleter());
         getServer().getPluginManager().registerEvents(this, this);
@@ -76,141 +82,190 @@ public final class SimpleFactions extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onBlockBreak (BlockBreakEvent event) throws SQLException {
-        Block block = event.getBlock();
-        Player player = event.getPlayer();
-        factionClaimProtect.run(db, new FactionClaimProtect.FactionClaimProtectArgs(block.getChunk(), player, event, "You cannot break blocks in claimed land!", true, true));
+        factionClaimProtect.run(event, event.getBlock().getChunk(), event.getPlayer(), false, false, false, true);
     }
 
     @EventHandler
     public void onBlockPlace (BlockPlaceEvent event) throws SQLException {
-        Block block = event.getBlock();
-        Player player = event.getPlayer();
-        if (event.getItemInHand().getType() == Material.CREEPER_SPAWN_EGG) {
-            return;
-        }
-        factionClaimProtect.run(db, new FactionClaimProtect.FactionClaimProtectArgs(block.getChunk(), player, event, "You cannot place blocks in claimed land!", true, true));
+        factionClaimProtect.run(event, event.getBlock().getChunk(), event.getPlayer(), false, false, false, true);
     }
 
     @EventHandler
     public void onPlayerInteract (PlayerInteractEvent event) throws SQLException {
         Block block = event.getClickedBlock();
-        // Why would block be null?
         if (block == null) {
             return;
         }
-        Player player = event.getPlayer();
-        factionClaimProtect.run(db, new FactionClaimProtect.FactionClaimProtectArgs(block.getChunk(), player, event, "You cannot do that in claimed land!", true, true));
+
+        Chunk chunkBeingModified = block.getChunk();
+
+        boolean allowWarzone = false;
+        boolean allowSafezone = false;
+        boolean allowFactionClaim = false;
+        ItemStack item = event.getItem();
+        if (item != null && item.getType() == Material.CREEPER_SPAWN_EGG) {
+            // Allow a creeper to be placed in faction claim
+            allowFactionClaim = true;
+        } else if (block.getState() instanceof InventoryHolder) {
+            // NOTE: InventoryHolder does not include minecart chests/ hoppers and not boats either
+            allowWarzone = true;
+            allowSafezone = true;
+            allowFactionClaim = true;
+        }
+        factionClaimProtect.run(event, chunkBeingModified, event.getPlayer(), allowWarzone, allowSafezone, allowFactionClaim, true);
     }
 
     @EventHandler
     public void onPlayerInteractEntityEvent (PlayerInteractEntityEvent event) throws SQLException {
+        Entity target = event.getRightClicked();
+        Chunk chunkBeingModified = target.getChunk();
         Player player = event.getPlayer();
-        Chunk loc = event.getRightClicked().getChunk();
-        factionClaimProtect.run(db, new FactionClaimProtect.FactionClaimProtectArgs(loc, player, event, "You cannot do that in claimed land!", true, true));
+        boolean allowFactionClaim = false;
+        if (target instanceof Creeper && player.getInventory().getItemInMainHand().getType() == Material.FLINT_AND_STEEL) {
+            allowFactionClaim = true;
+        }
+
+        factionClaimProtect.run(event, chunkBeingModified, player, false, false, allowFactionClaim, true);
     }
 
     @EventHandler
     public void onEntityDamageEvent (EntityDamageEvent event) throws SQLException {
-        if (!(event.getDamageSource() instanceof Player player)) {
+        if (!(event.getEntity() instanceof Player player)) {
             return;
         }
-        Chunk loc = event.getEntity().getChunk();
-        factionClaimProtect.run(db, new FactionClaimProtect.FactionClaimProtectArgs(loc, player, event, "You cannot do that in claimed land!", true, true));
+
+        Chunk chunkBeingModified = player.getChunk();
+
+        factionClaimProtect.run(event, chunkBeingModified, player, true, false, true, true);
     }
 
     @EventHandler
     public void onBlockDamageEvent (BlockDamageEvent event) throws SQLException {
-        factionClaimProtect.zoneRun(db, new FactionClaimProtect.FactionClaimProtectArgs(event.getBlock().getChunk(), event.getPlayer(), event, null, true, true));
+        factionClaimProtect.run(event, event.getBlock().getChunk(), event.getPlayer(), false, false, true, true);
     }
 
     @EventHandler
     public void onBlockFromToEvent (BlockFromToEvent event) throws SQLException {
-        factionClaimProtect.zoneRun(db, new FactionClaimProtect.FactionClaimProtectArgs(event.getBlock().getChunk(), null, event, null, true, true));
+        Player player = null;
+        factionClaimProtect.run(event, event.getBlock().getChunk(), player, false, false, true, false);
     }
 
     @EventHandler
     public void onBlockIgniteEvent (BlockIgniteEvent event) throws SQLException {
-        Block block = event.getBlock();
-        Player player = event.getPlayer();
-        if (player == null) {
-            return;
-        }
-        factionClaimProtect.run(db, new FactionClaimProtect.FactionClaimProtectArgs(block.getChunk(), player, event, "You cannot do that in claimed land!", true, true));
+        factionClaimProtect.run(event, event.getBlock().getChunk(), event.getPlayer(), false, false, false, true);
     }
 
     @EventHandler
     public void onBlockBurnEvent (BlockBurnEvent event) throws SQLException {
-        factionClaimProtect.zoneRun(db, new FactionClaimProtect.FactionClaimProtectArgs(event.getBlock().getChunk(), null, event, null, true, true));
+        Player player = null;
+        factionClaimProtect.run(event, event.getBlock().getChunk(), player, false, false, true, false);
     }
 
     @EventHandler
     public void onBlockPistonExtendEvent (BlockPistonExtendEvent event) throws SQLException {
-        factionClaimProtect.zoneRun(db, new FactionClaimProtect.FactionClaimProtectArgs(event.getBlock().getChunk(), null, event, null, true, true));
+        List<Block> blocks = event.getBlocks();
+        Player player = null;
+        for (Block block : blocks) {
+            Chunk chunkBeingModified = block.getChunk();
+            factionClaimProtect.run(event, chunkBeingModified, player, false, false, false, false);
+        }
     }
 
     @EventHandler
     public void onBlockPistonRetractEvent (BlockPistonRetractEvent event) throws SQLException {
-        factionClaimProtect.zoneRun(db, new FactionClaimProtect.FactionClaimProtectArgs(event.getBlock().getChunk(), null, event, null, true, true));
+        Player player = null;
+        factionClaimProtect.run(event, event.getBlock().getChunk(), player, false, false, false, false);
     }
 
     @EventHandler
     public void onPlayerBucketEmptyEvent (PlayerBucketEmptyEvent event) throws SQLException {
-        Block block = event.getBlockClicked().getRelative(event.getBlockFace());
-        Player player = event.getPlayer();
-        factionClaimProtect.run(db, new FactionClaimProtect.FactionClaimProtectArgs(block.getChunk(), player, event, "You cannot do that in claimed land!", true, true));
+        Chunk chunkBeingModified = event.getBlockClicked().getRelative(event.getBlockFace()).getChunk();
+        factionClaimProtect.run(event, chunkBeingModified, event.getPlayer(), false, false, false, true);
     }
 
     @EventHandler
     public void onBlockFadeEvent (BlockFadeEvent event) throws SQLException {
-        factionClaimProtect.zoneRun(db, new FactionClaimProtect.FactionClaimProtectArgs(event.getBlock().getChunk(), null, event, null, true, true));
+        Player player = null;
+        factionClaimProtect.run(event, event.getBlock().getChunk(), player, false, false, true, false);
     }
 
     @EventHandler
     public void onEntityChangeBlockEvent (EntityChangeBlockEvent event) throws SQLException {
-        factionClaimProtect.zoneRun(db, new FactionClaimProtect.FactionClaimProtectArgs(event.getBlock().getChunk(), null, event, null, true, true));
+        Player player = null;
+        factionClaimProtect.run(event, event.getBlock().getChunk(), player, false, false, false, false);
     }
 
     @EventHandler
     public void onEntityDamageByEntityEvent (EntityDamageByEntityEvent event) throws SQLException {
-        factionClaimProtect.zoneRun(db, new FactionClaimProtect.FactionClaimProtectArgs(event.getEntity().getChunk(), null, event, null, true, true));
+        Chunk chunkBeingModified = event.getEntity().getChunk();
+        Player player = null;
+        factionClaimProtect.run(event, chunkBeingModified, player, true, false, true, false);
     }
 
     @EventHandler
     public void onEntityExplodeEvent (EntityExplodeEvent event) throws SQLException {
-        List<Block> blocks = event.blockList();
-        for (Block block : blocks) {
-            factionClaimProtect.zoneRun(db, new FactionClaimProtect.FactionClaimProtectArgs(block.getChunk(), null, event, null, true, true));
+        // First we check if the origin is inside a zone, if so we cancel, otherwise filter out zone blocks
+        Chunk chunkBeingModifiedOrigin = event.getLocation().getChunk();
+        factionClaimProtect.run(event, chunkBeingModifiedOrigin, null, false, false, true, false);
+
+
+        Iterator<Block> it = event.blockList().iterator();
+        while (it.hasNext()) {
+            Block block = it.next();
+            Chunk chunkBeingModified = block.getChunk();
+            FactionChunk fChunk = db.selectFactionUsingChunk(chunkBeingModified.getX(), chunkBeingModified.getZ());
+            if (fChunk != null) {
+                if (fChunk.factionName.equalsIgnoreCase("safezone") || fChunk.factionName.equalsIgnoreCase("warzone")) {
+                    it.remove();
+                }
+            }
         }
     }
 
     @EventHandler
     public void onEntityInteractEvent (EntityInteractEvent event) throws SQLException {
-        factionClaimProtect.zoneRun(db, new FactionClaimProtect.FactionClaimProtectArgs(event.getBlock().getChunk(), null, event, null, true, true));
+        Player player = null;
+        factionClaimProtect.run(event, event.getBlock().getChunk(), player, false, false, false, false);
     }
 
     @EventHandler
     public void onCreatureSpawnEvent (CreatureSpawnEvent event) throws SQLException {
-        factionClaimProtect.zoneRun(db, new FactionClaimProtect.FactionClaimProtectArgs(event.getEntity().getChunk(), null, event, null, true, true));
+        Chunk chunkBeingModified = event.getEntity().getChunk();
+        Player player = null;
+        factionClaimProtect.run(event, chunkBeingModified, player, false, false, true, false);
     }
 
     @EventHandler
     public void onHangingBreakEvent (HangingBreakEvent event) throws SQLException {
-        factionClaimProtect.zoneRun(db, new FactionClaimProtect.FactionClaimProtectArgs(event.getEntity().getChunk(), null, event, null, true, true));
+        Chunk chunkBeingModified = event.getEntity().getChunk();
+        Player player = null;
+        factionClaimProtect.run(event, chunkBeingModified, player, false, false, false, false);
     }
 
     @EventHandler
     public void onFoodLevelChangeEvent (FoodLevelChangeEvent event) throws SQLException {
-        factionClaimProtect.zoneRun(db, new FactionClaimProtect.FactionClaimProtectArgs(event.getEntity().getChunk(), null, event, null, true, true));
+        Chunk chunkBeingModified = event.getEntity().getChunk();
+        Player player = null;
+        factionClaimProtect.run(event, chunkBeingModified, player, true, false, true, false);
     }
 
     @EventHandler
     public void onPotionSplashEvent (PotionSplashEvent event) throws SQLException {
-        factionClaimProtect.zoneRun(db, new FactionClaimProtect.FactionClaimProtectArgs(event.getEntity().getChunk(), null, event, null, true, true));
+        Chunk chunkBeingModified = event.getEntity().getChunk();
+        Player player = null;
+        factionClaimProtect.run(event, chunkBeingModified, player, true, false, true, false);
     }
 
     @EventHandler
     public void onBlockGrowEvent (BlockGrowEvent event) throws SQLException {
-        factionClaimProtect.zoneRun(db, new FactionClaimProtect.FactionClaimProtectArgs(event.getBlock().getChunk(), null, event, null, true, true));
+        Player player = null;
+        factionClaimProtect.run(event, event.getBlock().getChunk(), player, false, false, true, false);
+    }
+
+    @EventHandler
+    public void onBlockSpreadEvent  (BlockSpreadEvent  event) throws SQLException {
+        Player player = null;
+        factionClaimProtect.run(event, event.getBlock().getChunk(), player, false, false, true, false);
     }
 
     private void initializeRepeatingTasks () {

@@ -16,11 +16,10 @@ public class CreateFactionTable {
             )
         """;
 
-        try (
-            Statement stmt = connection.createStatement()) {
+        try (Statement stmt = connection.createStatement()) {
             stmt.execute(createFactionTable);
             String insertSafeZoneFaction = """
-                INSERT INTO faction (name, name_unique, is_protected) VALUES (?, ?, ?)
+                INSERT OR IGNORE INTO faction (name, name_unique, is_protected) VALUES (?, ?, ?)
             """;
             try (PreparedStatement safezoneStmt = connection.prepareStatement(insertSafeZoneFaction)) {
                 safezoneStmt.setString(1, "SafeZone");
@@ -29,7 +28,7 @@ public class CreateFactionTable {
                 safezoneStmt.execute();
             }
             String insertWarZoneFaction = """
-                INSERT INTO faction (name, name_unique, is_protected) VALUES (?, ?, ?)
+                INSERT OR IGNORE INTO faction (name, name_unique, is_protected) VALUES (?, ?, ?)
             """;
             try (PreparedStatement warzoneStmt = connection.prepareStatement(insertWarZoneFaction)) {
                 warzoneStmt.setString(1, "WarZone");
