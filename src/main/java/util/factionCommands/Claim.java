@@ -6,11 +6,14 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Chunk;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import types.FactionChunk;
 import types.FactionPlayer;
 import types.PluginConfig;
 import util.BaseFactionCommand;
 import util.other.BroadcastMessageToFactionMembers;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.Objects;
 
 public record Claim(PluginConfig config, DataBaseHelper connection) implements BaseFactionCommand {
     @Override
@@ -53,7 +56,29 @@ public record Claim(PluginConfig config, DataBaseHelper connection) implements B
             sender.sendMessage(Component.text("You must be in a faction to claim land", NamedTextColor.RED));
             return;
         }
-        // todo: ensure total power of faction is greater than the amount of currently claimed land
+
+        FactionChunk factionChunk = connection.selectFactionUsingChunk(x, z);
+        if (factionChunk != null) {
+            if (Objects.equals(factionChunk.factionId, factionPlayer.factionId)) {
+                sender.sendMessage(Component.text("Your faction already owns this land!", NamedTextColor.GREEN));
+            } else {
+                sender.sendMessage(Component.text(String.format("This land is already owned by %s", factionChunk.factionName), NamedTextColor.RED));
+            }
+            return;
+        }
+
+        List<FactionPlayer> members = connection.selectAllFactionMembersUsingFactionId(factionPlayer.factionId);
+        int totalPower = 0;
+        for (FactionPlayer member : members) {
+            totalPower = totalPower + member.power;
+        }
+
+        int numberOfAllClaims = connection.selectAllFactionClaims(factionPlayer.factionId).size();
+        if (totalPower - numberOfAllClaims > config.factionLandClaimCost) {
+            player.sendMessage(Component.text("Your faction does not have enough power to claim this land", NamedTextColor.RED));
+            return;
+        }
+
         connection.createFactionChunk(factionPlayer.factionId, x, z);
         BroadcastMessageToFactionMembers.run(connection, factionPlayer.factionId, Component.text(String.format("%s just claimed land for the faction!", player.getName()), NamedTextColor.GREEN));
     }

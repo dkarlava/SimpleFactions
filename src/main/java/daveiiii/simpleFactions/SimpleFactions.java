@@ -2,6 +2,8 @@ package daveiiii.simpleFactions;
 
 import daveiiii.simpleFactions.commands.FactionsCommandManager;
 import daveiiii.simpleFactions.data.DataBaseHelper;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Material;
@@ -29,6 +31,7 @@ import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -309,6 +312,19 @@ public final class SimpleFactions extends JavaPlugin implements Listener {
     public void onBlockSpreadEvent  (BlockSpreadEvent  event) throws SQLException {
         Player player = null;
         factionClaimProtect.run(event, event.getBlock().getChunk(), player, false, false, true, false);
+    }
+
+    @EventHandler
+    public void onPlayerDeath(PlayerDeathEvent event) throws SQLException {
+        Player player = event.getEntity();
+        UUID playerId = player.getUniqueId();
+        int currentPower = db.selectPlayerData(playerId).power;
+        currentPower = currentPower - config.factionDeathPowerLose;
+        if (currentPower <= config.factionMinPowerPerPlayer) {
+            currentPower = config.factionMinPowerPerPlayer;
+        }
+        db.updatePlayerPower(playerId, currentPower);
+        player.sendMessage(Component.text(String.format("Your new power is %d/%d", currentPower, config.factionMaxPowerPerPlayer), NamedTextColor.RED));
     }
 
     private void initializeRepeatingTasks () {

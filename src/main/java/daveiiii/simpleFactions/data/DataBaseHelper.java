@@ -5,6 +5,7 @@ import daveiiii.simpleFactions.data.namedQueries.faction.select.SelectFactionByP
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.create.CreateFactionChunk;
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.create.CreateFactionSafeZoneWarZoneChunk;
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.delete.DeleteFactionChunk;
+import daveiiii.simpleFactions.data.namedQueries.factionChunk.select.SelectAllFactionClaims;
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.select.SelectFactionUsingChunk;
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.select.SelectNearbyChunks;
 import daveiiii.simpleFactions.data.namedQueries.factionDisband.delete.DeleteFactionDisband;
@@ -20,6 +21,7 @@ import daveiiii.simpleFactions.data.namedQueries.factionMember.select.SelectAllF
 import daveiiii.simpleFactions.data.namedQueries.playerData.insert.InsertPlayerData;
 import daveiiii.simpleFactions.data.namedQueries.playerData.select.SelectPlayerData;
 import daveiiii.simpleFactions.data.namedQueries.playerData.update.UpdateIncreasePowerForAllOnlinePlayers;
+import daveiiii.simpleFactions.data.namedQueries.playerData.update.UpdatePlayerPower;
 import daveiiii.simpleFactions.data.namedQueries.tables.*;
 import daveiiii.simpleFactions.data.namedQueries.faction.select.SelectTotalFactionPageNumber;
 import daveiiii.simpleFactions.data.namedQueries.faction.select.SelectFactionPage;
@@ -172,6 +174,14 @@ public class DataBaseHelper {
 
     public void deleteFactionChunk (int x, int z) throws SQLException {
         DeleteFactionChunk.run(connection, x, z);
+    }
+
+    public void updatePlayerPower (UUID playerId, int newPower) throws SQLException {
+        UpdatePlayerPower.run(connection, playerId, newPower);
+    }
+
+    public List<FactionChunk> selectAllFactionClaims (String factionId) throws SQLException {
+        return SelectAllFactionClaims.run(connection, factionId);
     }
 
     public void close () throws SQLException {
