@@ -5,14 +5,16 @@ import daveiiii.simpleFactions.data.namedQueries.factionDisband.delete.DeleteFac
 import daveiiii.simpleFactions.data.namedQueries.factionDisband.insert.InsertFactionDisband;
 import daveiiii.simpleFactions.data.namedQueries.factionDisband.select.SelectFactionDisbandedPrimed;
 import daveiiii.simpleFactions.data.namedQueries.factionDisband.update.UpdateFactionDisbandTimestampAndPlayerId;
+import daveiiii.simpleFactions.data.namedQueries.factionInvite.insert.InsertPlayerInvite;
 import daveiiii.simpleFactions.data.namedQueries.tables.CreateFactionDisbandTable;
+import daveiiii.simpleFactions.data.namedQueries.tables.CreateFactionInviteTable;
 import daveiiii.simpleFactions.data.namedQueries.tables.CreateFactionTable;
 import daveiiii.simpleFactions.data.namedQueries.faction.select.SelectFactionPlayerIsIn;
 import daveiiii.simpleFactions.data.namedQueries.faction.select.SelectTotalFactionPageNumber;
 import daveiiii.simpleFactions.data.namedQueries.faction.select.SelectFactionPage;
 import daveiiii.simpleFactions.data.namedQueries.factionMember.delete.DeleteFactionMember;
 import daveiiii.simpleFactions.data.namedQueries.tables.CreateFactionMemberTable;
-import daveiiii.simpleFactions.data.namedQueries.factionMember.select.SelectFactionPlayerRank;
+import daveiiii.simpleFactions.data.namedQueries.factionMember.select.SelectFactionMember;
 import types.Faction;
 import types.FactionDisband;
 import types.FactionPlayer;
@@ -50,6 +52,8 @@ public class DataBaseHelper {
         logger.info("CreateFactionMemberTable created");
         CreateFactionDisbandTable.run(connection);
         logger.info("CreateFactionDisbandTable created");
+        CreateFactionInviteTable.run(connection);
+        logger.info("CreateFactionInviteTable created");
         logger.info("========== DATABASE INITIALIZED ==========");
     }
 
@@ -61,13 +65,17 @@ public class DataBaseHelper {
         return SelectFactionPlayerIsIn.run(connection, playerId);
     }
 
-    public FactionPlayer selectFactionPlayerRank (UUID playerId) throws SQLException {
-        return SelectFactionPlayerRank.run(connection, playerId);
+    public FactionPlayer selectFactionPlayerMember(UUID playerId) throws SQLException {
+        return SelectFactionMember.run(connection, playerId);
     }
 
     public FactionDisband selectFactionDisbandedPrimed (String factionId) throws SQLException {
         return SelectFactionDisbandedPrimed.run(connection, factionId);
     }
+
+//    public FactionDisband selectFactionInvitePrimed (String factionId) throws SQLException {
+//        return SelectFactionInvitePrimed.run(connection, factionId);
+//    }
 
     public void insertFactionDisbandedPrimed (UUID playerId, String factionId) throws SQLException {
         InsertFactionDisband.run(connection, playerId, factionId);
@@ -95,6 +103,10 @@ public class DataBaseHelper {
 
     public String selectFactionByName (String factionName) throws SQLException {
         return SelectFactionByName.run(connection, factionName);
+    }
+
+    public void insertPlayerInvite (String factionId, UUID playerId) throws SQLException {
+        InsertPlayerInvite.run(connection, factionId, playerId);
     }
 
     public void close () throws SQLException {

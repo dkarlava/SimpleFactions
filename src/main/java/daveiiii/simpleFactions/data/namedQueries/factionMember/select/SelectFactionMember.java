@@ -7,7 +7,7 @@ import types.PlayerRank;
 import java.sql.*;
 import java.util.UUID;
 
-public class SelectFactionPlayerRank extends BaseQuery {
+public class SelectFactionMember extends BaseQuery {
     public static FactionPlayer run (Connection connection, UUID playerId) throws SQLException {
         String[] queryItems = {
                 "SELECT rank, faction_id",
@@ -19,7 +19,7 @@ public class SelectFactionPlayerRank extends BaseQuery {
             stmt.setString(1, String.valueOf(playerId));
             try (ResultSet rs = stmt.executeQuery()) {
                 if (!rs.next()) {
-                    throw new SQLException("No faction player rank found for player " + playerId);
+                    return null;
                 }
                 return new FactionPlayer(PlayerRank.getValue(rs.getString("rank")), rs.getString("faction_id"));
             }

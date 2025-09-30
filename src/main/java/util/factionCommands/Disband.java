@@ -34,8 +34,8 @@ public record Disband (PluginConfig config, DataBaseHelper connection) implement
             return;
         }
 
-        FactionPlayer factionPlayer = connection.selectFactionPlayerRank(playerId);
-        if (factionPlayer.rank != PlayerRank.Owner) {
+        FactionPlayer factionPlayer = connection.selectFactionPlayerMember(playerId);
+        if (factionPlayer == null || factionPlayer.rank != PlayerRank.Owner) {
             sender.sendMessage(Component.text("Only the owner can disband a faction.").color(NamedTextColor.RED));
             return;
         }
