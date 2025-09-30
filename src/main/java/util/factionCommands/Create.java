@@ -9,7 +9,7 @@ public record Create(PluginConfig config) implements BaseFactionCommand {
     @Override
     public void execute(CommandSender sender, String[] args) {
         if (args.length != 1) {
-            sender.sendMessage("Usage: /faction create <factionName>");
+            sender.sendMessage("Usage: /f create <factionName>");
             return;
         }
         String factionName = args[0];
