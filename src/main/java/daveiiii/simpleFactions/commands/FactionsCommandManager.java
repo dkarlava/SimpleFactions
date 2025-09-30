@@ -9,7 +9,9 @@ import types.PluginConfig;
 import util.BaseFactionCommand;
 import types.PossibleFactionCommands;
 import util.factionCommands.Create;
+import util.factionCommands.Leave;
 import util.factionCommands.ListCommand;
+import util.factionCommands.Show;
 
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -24,8 +26,10 @@ public class FactionsCommandManager implements CommandExecutor {
 
     public FactionsCommandManager(PluginConfig config, DataBaseHelper connection, Logger logger) {
         this.logger = logger;
-        commandMap.put(PossibleFactionCommands.Create, new Create(config));
+        commandMap.put(PossibleFactionCommands.Create, new Create(config, connection));
         commandMap.put(PossibleFactionCommands.List, new ListCommand(config, connection));
+        commandMap.put(PossibleFactionCommands.Leave, new Leave(config, connection));
+        commandMap.put(PossibleFactionCommands.Show, new Show(config, connection));
     }
 
     @Override

@@ -3,7 +3,9 @@ package types;
 public enum PossibleFactionCommands {
     Create("create"),
     Join("join"),
-    List("list");
+    List("list"),
+    Leave("leave"),
+    Show("show");
     private final String command;
     PossibleFactionCommands (String command) {
         this.command = command;

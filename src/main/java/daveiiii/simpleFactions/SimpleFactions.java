@@ -5,8 +5,6 @@ import daveiiii.simpleFactions.data.DataBaseHelper;
 import org.bukkit.plugin.java.JavaPlugin;
 import types.PluginConfig;
 import util.factionCommands.FactionCommandTabCompleter;
-
-import java.sql.SQLException;
 import java.util.Objects;
 
 public final class SimpleFactions extends JavaPlugin {
@@ -15,21 +13,11 @@ public final class SimpleFactions extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        db = new DataBaseHelper();
-
         try {
-            db.connect(getDataFolder() + "/factions.db");
-            getLogger().info("Database initialized!");
+            db = new DataBaseHelper(getLogger(), getDataFolder() + "/factions.db");
         } catch (Exception e) {
             getLogger().severe(e.toString());
         }
-
-        try {
-            db.createFaction("TEST");
-        } catch (SQLException e) {
-            getLogger().severe(e.toString());
-        }
-
 
         this.saveDefaultConfig();
         getLogger().info("SimpleFactions has been enabled! AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
