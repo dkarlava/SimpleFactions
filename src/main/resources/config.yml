@@ -1,0 +1,7 @@
+# Defaults to ^[a-zA-Z0-9]+$ if removed
+faction-name-regex: "^[a-zA-Z0-9]+$"
+
+# Defaults to 3 if removed or value is <= 0
+faction-name-length-min: 3
+# Defaults for 15 if removed or value is >= 100
+faction-name-length-max: 15
