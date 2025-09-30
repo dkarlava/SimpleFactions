@@ -9,7 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 
-public class SelectFactionPlayerIsIn extends BaseQuery {
+public class SelectFactionByPlayerId extends BaseQuery {
     public static Faction run (Connection connection, UUID playerId) throws SQLException {
         String[] queryItems = {
                 "SELECT f.*",

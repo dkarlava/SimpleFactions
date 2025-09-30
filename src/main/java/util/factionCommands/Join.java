@@ -28,7 +28,7 @@ public record Join(PluginConfig config, DataBaseHelper connection) implements Ba
         String factionName = args[0];
         UUID playerId = player.getUniqueId();
 
-        if (connection.selectFactionPlayerIsIn(playerId) != null) {
+        if (connection.selectFactionByPlayerId(playerId) != null) {
             sender.sendMessage(Component.text("You must leave your current faction to join another one.").color(NamedTextColor.RED));
             return;
         }

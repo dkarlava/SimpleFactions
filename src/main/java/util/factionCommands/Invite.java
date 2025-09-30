@@ -49,7 +49,7 @@ public record Invite (PluginConfig config, DataBaseHelper connection) implements
 
         UUID otherPlayerId = otherPlayer.getUniqueId();
 
-        Faction factionDetails = connection.selectFactionPlayerIsIn(playerId);
+        Faction factionDetails = connection.selectFactionByPlayerId(playerId);
         if (factionDetails == null) {
             sender.sendMessage(Component.text(String.format("Internal Error. Could not get faction details for faction id %s", factionPlayer.factionId), NamedTextColor.RED));
             return;

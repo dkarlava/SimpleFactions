@@ -25,12 +25,12 @@ public record Leave (PluginConfig config, DataBaseHelper connection) implements 
         Player player = (Player) sender;
         UUID playerId = player.getUniqueId();
 
-        if (connection.selectFactionPlayerIsIn(playerId) == null) {
+        if (connection.selectFactionByPlayerId(playerId) == null) {
             sender.sendMessage(Component.text("You must be in a faction to leave.").color(NamedTextColor.RED));
             return;
         }
 
-        connection.deleteFactionPlayerIsIn(playerId);
+        connection.deleteFactionMember(playerId);
         sender.sendMessage(Component.text("You have left the faction.").color(NamedTextColor.GRAY));
     }
 }

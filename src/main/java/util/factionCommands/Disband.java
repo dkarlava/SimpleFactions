@@ -29,7 +29,7 @@ public record Disband (PluginConfig config, DataBaseHelper connection) implement
 
         UUID playerId = player.getUniqueId();
 
-        if (connection.selectFactionPlayerIsIn(playerId) == null) {
+        if (connection.selectFactionByPlayerId(playerId) == null) {
             sender.sendMessage(Component.text("You must be in a faction to disband one.").color(NamedTextColor.RED));
             return;
         }

@@ -1,6 +1,7 @@
 package daveiiii.simpleFactions.data;
 import daveiiii.simpleFactions.data.namedQueries.faction.insert.InsertFaction;
 import daveiiii.simpleFactions.data.namedQueries.faction.select.SelectFactionByName;
+import daveiiii.simpleFactions.data.namedQueries.faction.select.SelectFactionByPlayerId;
 import daveiiii.simpleFactions.data.namedQueries.factionDisband.delete.DeleteFactionDisband;
 import daveiiii.simpleFactions.data.namedQueries.factionDisband.insert.InsertFactionDisband;
 import daveiiii.simpleFactions.data.namedQueries.factionDisband.select.SelectFactionDisbandedPrimed;
@@ -14,7 +15,6 @@ import daveiiii.simpleFactions.data.namedQueries.factionMember.select.SelectAllF
 import daveiiii.simpleFactions.data.namedQueries.tables.CreateFactionDisbandTable;
 import daveiiii.simpleFactions.data.namedQueries.tables.CreateFactionInviteTable;
 import daveiiii.simpleFactions.data.namedQueries.tables.CreateFactionTable;
-import daveiiii.simpleFactions.data.namedQueries.faction.select.SelectFactionPlayerIsIn;
 import daveiiii.simpleFactions.data.namedQueries.faction.select.SelectTotalFactionPageNumber;
 import daveiiii.simpleFactions.data.namedQueries.faction.select.SelectFactionPage;
 import daveiiii.simpleFactions.data.namedQueries.factionMember.delete.DeleteFactionMember;
@@ -67,8 +67,8 @@ public class DataBaseHelper {
         InsertFaction.run(connection, factionName,  playerId);
     }
 
-    public Faction selectFactionPlayerIsIn (UUID playerId) throws SQLException {
-        return SelectFactionPlayerIsIn.run(connection, playerId);
+    public Faction selectFactionByPlayerId (UUID playerId) throws SQLException {
+        return SelectFactionByPlayerId.run(connection, playerId);
     }
 
     public FactionPlayer selectFactionPlayerMember(UUID playerId) throws SQLException {
@@ -103,7 +103,7 @@ public class DataBaseHelper {
         DeleteFactionInvite.run(connection, playerId, factionId);
     }
 
-    public void deleteFactionPlayerIsIn (UUID playerId) throws SQLException {
+    public void deleteFactionMember (UUID playerId) throws SQLException {
         DeleteFactionMember.run(connection, playerId);
     }
 

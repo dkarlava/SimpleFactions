@@ -26,7 +26,7 @@ public record Show (PluginConfig config, DataBaseHelper connection) implements B
         Player player = (Player) sender;
         UUID playerId = player.getUniqueId();
 
-        Faction factionDetails = connection.selectFactionPlayerIsIn(playerId);
+        Faction factionDetails = connection.selectFactionByPlayerId(playerId);
 
         if (factionDetails == null) {
             sender.sendMessage(Component.text("That faction does not exist!"));

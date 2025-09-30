@@ -25,7 +25,7 @@ public record Create (PluginConfig config, DataBaseHelper connection) implements
 
         UUID playerId = player.getUniqueId();
 
-        if (connection.selectFactionPlayerIsIn(playerId) != null) {
+        if (connection.selectFactionByPlayerId(playerId) != null) {
             sender.sendMessage(Component.text("You must leave your current faction before you can create a new one.").color(NamedTextColor.RED));
             return;
         }
