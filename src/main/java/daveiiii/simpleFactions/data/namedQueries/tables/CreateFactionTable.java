@@ -9,7 +9,8 @@ public class CreateFactionTable {
         String createFactionTable = """
             CREATE TABLE IF NOT EXISTS faction (
                 id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
-                name TEXT UNIQUE NOT NULL
+                name TEXT NOT NULL,
+                name_unique UNIQUE NOT NULL
             )
         """;
 

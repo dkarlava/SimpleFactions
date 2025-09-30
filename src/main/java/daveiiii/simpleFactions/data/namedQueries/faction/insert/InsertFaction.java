@@ -11,10 +11,11 @@ public class InsertFaction extends BaseQuery {
             connection.setAutoCommit(false);
 
             // Inserting the faction
-            String createFactionQuery = "INSERT INTO faction(name) VALUES(?) RETURNING id";
+            String createFactionQuery = "INSERT INTO faction(name, name_unique) VALUES(?, ?) RETURNING id";
             String factionId;
             try (PreparedStatement stmt = connection.prepareStatement(createFactionQuery)) {
                 stmt.setString(1, factionName);
+                stmt.setString(2, factionName.toLowerCase());
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (!rs.next()) {
                         throw new SQLException("CreateFactionQuery query expected a result");

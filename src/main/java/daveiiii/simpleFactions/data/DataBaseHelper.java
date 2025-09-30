@@ -1,5 +1,6 @@
 package daveiiii.simpleFactions.data;
 import daveiiii.simpleFactions.data.namedQueries.faction.insert.InsertFaction;
+import daveiiii.simpleFactions.data.namedQueries.faction.select.SelectFactionByName;
 import daveiiii.simpleFactions.data.namedQueries.factionDisband.delete.DeleteFactionDisband;
 import daveiiii.simpleFactions.data.namedQueries.factionDisband.insert.InsertFactionDisband;
 import daveiiii.simpleFactions.data.namedQueries.factionDisband.select.SelectFactionDisbandedPrimed;
@@ -92,9 +93,9 @@ public class DataBaseHelper {
         return SelectTotalFactionPageNumber.run(connection);
     }
 
-//    public String selectFactionName (String factionId) throws SQLException {
-//        return SelectFactionName.run(connection, factionId);
-//    }
+    public String selectFactionByName (String factionName) throws SQLException {
+        return SelectFactionByName.run(connection, factionName);
+    }
 
     public void close () throws SQLException {
         if (connection != null) connection.close();

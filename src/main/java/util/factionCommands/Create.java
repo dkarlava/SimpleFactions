@@ -32,13 +32,18 @@ public record Create (PluginConfig config, DataBaseHelper connection) implements
 
         String factionName = args[0];
         if (factionName.length() < config.minFactionNameLength || factionName.length() > config.maxFactionNameLength) {
-            sender.sendMessage(String.format("Faction name must be between %d and %d characters.", config.minFactionNameLength, config.maxFactionNameLength));
+            sender.sendMessage(Component.text(String.format("Faction name must be between %d and %d characters.", config.minFactionNameLength, config.maxFactionNameLength), NamedTextColor.RED));
             return;
         }
         if (!config.factionNameRegex.matcher(factionName).matches()) {
-            sender.sendMessage(String.format("Faction name must match the following regex: %s.", config.factionNameRegex));
+            sender.sendMessage(Component.text(String.format("Faction name must match the following regex: %s.", config.factionNameRegex), NamedTextColor.RED));
             return;
         }
+
+        if (connection.selectFactionByName(factionName) != null) {
+            sender.sendMessage(Component.text(String.format("Faction name %s already exists.", factionName), NamedTextColor.RED));
+        }
+
         connection.insertFaction(factionName, playerId);
         Bukkit.broadcast(Component.text(String.format("%s just created the faction: %s", player.getName(), factionName)).color(NamedTextColor.GREEN));
     }
