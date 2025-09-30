@@ -2,6 +2,8 @@ package daveiiii.simpleFactions.data;
 import daveiiii.simpleFactions.data.namedQueries.faction.insert.InsertFaction;
 import daveiiii.simpleFactions.data.namedQueries.faction.select.SelectFactionByName;
 import daveiiii.simpleFactions.data.namedQueries.faction.select.SelectFactionByPlayerId;
+import daveiiii.simpleFactions.data.namedQueries.factionChunk.create.CreateFactionChunk;
+import daveiiii.simpleFactions.data.namedQueries.factionChunk.select.SelectNearbyChunks;
 import daveiiii.simpleFactions.data.namedQueries.factionDisband.delete.DeleteFactionDisband;
 import daveiiii.simpleFactions.data.namedQueries.factionDisband.insert.InsertFactionDisband;
 import daveiiii.simpleFactions.data.namedQueries.factionDisband.select.SelectFactionDisbandedPrimed;
@@ -25,6 +27,7 @@ import types.*;
 import java.io.File;
 import java.sql.*;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
 
@@ -59,6 +62,8 @@ public class DataBaseHelper {
         logger.info("CreateFactionInviteTable created");
         CreatePlayerData.run(connection);
         logger.info("CreatePlayerData created");
+        CreateFactionChunkTable.run(connection);
+        logger.info("CreateFactionChunkTable created");
         logger.info("========== DATABASE INITIALIZED ==========");
     }
 
@@ -140,6 +145,14 @@ public class DataBaseHelper {
 
     public List<FactionPlayer> selectAllFactionMembersUsingFactionId (String factionId) throws SQLException {
         return SelectAllFactionMembersUsingFactionId.run(connection, factionId);
+    }
+
+    public void createFactionChunk (String factionId, int x, int z) throws SQLException {
+        CreateFactionChunk.run(connection, factionId, x, z);
+    }
+
+    public Map<String, FactionChunk> selectNearbyChunks(int minX, int maxX, int minZ, int maxZ) throws SQLException {
+        return SelectNearbyChunks.run(connection, minX, maxX, minZ, maxZ);
     }
 
     public void close () throws SQLException {

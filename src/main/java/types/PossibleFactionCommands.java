@@ -9,7 +9,9 @@ public enum PossibleFactionCommands {
     Disband("disband"),
     Invite("invite"),
     Kick("kick"),
-    Power("power");
+    Power("power"),
+    Map("map"),
+    Claim("claim");
     private final String command;
     PossibleFactionCommands (String command) {
         this.command = command;
