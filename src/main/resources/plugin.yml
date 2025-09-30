@@ -1,0 +1,4 @@
+name: SimpleFactions
+version: '1.0-SNAPSHOT'
+main: daveiiii.simpleFactions.SimpleFactions
+api-version: '1.21'
