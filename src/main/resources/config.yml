@@ -11,3 +11,21 @@ faction-disband-auto-timeout: 5
 
 # Unit is in minutes. Defaults to 5 if removed or less than 0
 faction-invite-auto-timeout: 5
+
+# Unit is in minutes. Interval to increase all online players power. Defaults to 15 if removed or less than 0
+faction-power-increase-interval: 15
+
+# Amount of power to increase everytime the interval is met. Defaults to 1 if removed or less than 0
+faction-power-increase-amount: 1
+
+# Max power each player can have. Defaults to 10 if removed or less than 0
+faction-max-power-per-player: 10
+
+# Minimum power each player can have. Defaults to -10 if removed or greater than max power
+faction-min-power-per-player: -10
+
+# How much power it costs to claim one chunk. Defaults to 1 if removed or less than 0
+faction-land-claim-cost: 1
+
+# How much power a players loses on each death. Defaults to 4 if removed or less than 0
+faction-death-power-lose: 4

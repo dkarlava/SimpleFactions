@@ -8,7 +8,8 @@ public enum PossibleFactionCommands {
     Show("show"),
     Disband("disband"),
     Invite("invite"),
-    Kick("kick");
+    Kick("kick"),
+    Power("power");
     private final String command;
     PossibleFactionCommands (String command) {
         this.command = command;

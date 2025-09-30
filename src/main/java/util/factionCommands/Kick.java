@@ -57,9 +57,9 @@ public record Kick(PluginConfig config, DataBaseHelper connection) implements Ba
         if (CompareRanks.compareRanks(factionPlayer.rank, otherFactionPlayer.rank)) {
             connection.deleteFactionMember(otherPlayerId);
             otherPlayer.sendMessage(Component.text("You have been kicked from the faction!", NamedTextColor.RED));
-            List<UUID> otherMembers = connection.selectAllFactionMembersUsingFactionId(factionPlayer.factionId);
-            for (UUID otherMemberId : otherMembers) {
-                Player otherMember = Bukkit.getPlayer(otherMemberId);
+            List<FactionPlayer> otherMembers = connection.selectAllFactionMembersUsingFactionId(factionPlayer.factionId);
+            for (FactionPlayer otherFactionMember : otherMembers) {
+                Player otherMember = Bukkit.getPlayer(otherFactionMember.playerId);
                 if (otherMember != null) {
                     otherMember.sendMessage(Component.text(String.format("%s has been kicked from the faction!", otherPlayerName), NamedTextColor.RED));
                 }

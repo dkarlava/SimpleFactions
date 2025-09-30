@@ -1,7 +1,6 @@
 package daveiiii.simpleFactions.data.namedQueries.factionMember.select;
 
 import daveiiii.simpleFactions.data.namedQueries.BaseQuery;
-import types.Faction;
 import types.FactionPlayer;
 import types.PlayerRank;
 
@@ -11,9 +10,9 @@ import java.util.List;
 import java.util.UUID;
 
 public class SelectAllFactionMembersUsingFactionId extends BaseQuery {
-    public static List<UUID> run (Connection connection, String factionId) throws SQLException {
+    public static List<FactionPlayer> run (Connection connection, String factionId) throws SQLException {
         String[] queryItems = {
-                "SELECT player_id",
+                "SELECT player_id, rank",
                 "FROM faction_member",
                 "WHERE faction_id = ?",
         };
@@ -21,10 +20,10 @@ public class SelectAllFactionMembersUsingFactionId extends BaseQuery {
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, factionId);
             try (ResultSet rs = stmt.executeQuery()) {
-                List<UUID> ret = new ArrayList<>();
+                List<FactionPlayer> ret = new ArrayList<>();
                 while (rs.next()) {
                     UUID playerId = UUID.fromString(rs.getString("player_id"));
-                    ret.add(playerId);
+                    ret.add(new FactionPlayer(PlayerRank.getValue(rs.getString("rank")), factionId, playerId));
                 }
                 return ret;
             }

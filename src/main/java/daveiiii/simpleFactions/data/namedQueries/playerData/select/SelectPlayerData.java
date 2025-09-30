@@ -1,17 +1,18 @@
-package daveiiii.simpleFactions.data.namedQueries.factionMember.select;
+package daveiiii.simpleFactions.data.namedQueries.playerData.select;
 
 import daveiiii.simpleFactions.data.namedQueries.BaseQuery;
-import types.FactionPlayer;
-import types.PlayerRank;
-
-import java.sql.*;
+import types.PlayerData;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.UUID;
 
-public class SelectFactionMember extends BaseQuery {
-    public static FactionPlayer run (Connection connection, UUID playerId) throws SQLException {
+public class SelectPlayerData extends BaseQuery {
+    public static PlayerData run (Connection connection, UUID playerId) throws SQLException {
         String[] queryItems = {
-                "SELECT rank, faction_id",
-                "FROM faction_member",
+                "SELECT power",
+                "FROM player_data",
                 "WHERE player_id = ?",
         };
         String query = BaseQuery.createQuery(queryItems);
@@ -21,7 +22,7 @@ public class SelectFactionMember extends BaseQuery {
                 if (!rs.next()) {
                     return null;
                 }
-                return new FactionPlayer(PlayerRank.getValue(rs.getString("rank")), rs.getString("faction_id"), playerId);
+                return new PlayerData(playerId, rs.getInt("power"));
             }
         }
     }

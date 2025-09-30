@@ -51,10 +51,10 @@ public record Join(PluginConfig config, DataBaseHelper connection) implements Ba
         connection.insertFactionMember(factionDetails.id, playerId);
 
         sender.sendMessage(Component.text(String.format("You have joined %s!", factionDetails.name), NamedTextColor.GREEN));
-        List<UUID> otherMembers = connection.selectAllFactionMembersUsingFactionId(factionDetails.id);
-        for (UUID otherPlayerId : otherMembers) {
-            if (!otherPlayerId.equals(playerId)) {
-                Player otherPlayer = Bukkit.getPlayer(otherPlayerId);
+        List<FactionPlayer> otherMembers = connection.selectAllFactionMembersUsingFactionId(factionDetails.id);
+        for (FactionPlayer otherPlayers : otherMembers) {
+            if (!otherPlayers.playerId.equals(playerId)) {
+                Player otherPlayer = Bukkit.getPlayer(otherPlayers.playerId);
                 if (otherPlayer != null) {
                     otherPlayer.sendMessage(Component.text(String.format("%s has joined the faction!", player.getName()), NamedTextColor.GREEN));
                 }
