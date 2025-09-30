@@ -5,10 +5,9 @@ import daveiiii.simpleFactions.data.DataBaseHelper;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Material;
+import org.bukkit.Tag;
 import org.bukkit.block.Block;
-import org.bukkit.entity.Creeper;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
@@ -92,27 +91,45 @@ public final class SimpleFactions extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onPlayerInteract (PlayerInteractEvent event) throws SQLException {
+        boolean allowWarzone = false;
+        boolean allowSafezone = false;
+        boolean allowFactionClaim = false;
         Block block = event.getClickedBlock();
         if (block == null) {
             return;
         }
-
-        Chunk chunkBeingModified = block.getChunk();
-
-        boolean allowWarzone = false;
-        boolean allowSafezone = false;
-        boolean allowFactionClaim = false;
+        Material type = block.getType();
         ItemStack item = event.getItem();
+        Action action = event.getAction();
+        Chunk chunkBeingModified = block.getChunk();
+        Block targetBlock = block.getRelative(event.getBlockFace());
+        Chunk targetChunk = targetBlock.getChunk();
+
         if (item != null && item.getType() == Material.CREEPER_SPAWN_EGG) {
             // Allow a creeper to be placed in faction claim
             allowFactionClaim = true;
+            factionClaimProtect.run(event, chunkBeingModified, event.getPlayer(), allowWarzone, allowSafezone, allowFactionClaim, true);
         } else if (block.getState() instanceof InventoryHolder) {
+            // Always allow chests and similar items to be opened
             // NOTE: InventoryHolder does not include minecart chests/ hoppers and not boats either
             allowWarzone = true;
             allowSafezone = true;
             allowFactionClaim = true;
+            factionClaimProtect.run(event, chunkBeingModified, event.getPlayer(), allowWarzone, allowSafezone, allowFactionClaim, true);
+        } else if (Tag.BUTTONS.isTagged(type) || Tag.DOORS.isTagged(type) || Tag.TRAPDOORS.isTagged(type) || Tag.FENCE_GATES.isTagged(type) || Tag.PRESSURE_PLATES.isTagged(type)) {
+            // TODO: Add lever to this check
+            allowWarzone = true;
+            allowSafezone = true;
+            factionClaimProtect.run(event, chunkBeingModified, event.getPlayer(), allowWarzone, allowSafezone, allowFactionClaim, true);
+        } else if (action == Action.PHYSICAL) {
+            if (type == Material.FARMLAND) {
+                // allowing trample in claims, but not in safezone
+                allowFactionClaim = true;
+                factionClaimProtect.run(event, chunkBeingModified, event.getPlayer(), allowWarzone, allowSafezone, allowFactionClaim, true);
+            }
+        } else {
+            factionClaimProtect.run(event, targetChunk, event.getPlayer(), allowWarzone, allowSafezone, allowFactionClaim, true);
         }
-        factionClaimProtect.run(event, chunkBeingModified, event.getPlayer(), allowWarzone, allowSafezone, allowFactionClaim, true);
     }
 
     @EventHandler
@@ -152,7 +169,9 @@ public final class SimpleFactions extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onBlockIgniteEvent (BlockIgniteEvent event) throws SQLException {
-        factionClaimProtect.run(event, event.getBlock().getChunk(), event.getPlayer(), false, false, false, true);
+        // This event has a .getPlayer(), but I am choosing to ignore since it is sometimes null
+        Player player = null;
+        factionClaimProtect.run(event, event.getBlock().getChunk(), player, false, false, true, false);
     }
 
     @EventHandler
@@ -163,10 +182,11 @@ public final class SimpleFactions extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onBlockPistonExtendEvent (BlockPistonExtendEvent event) throws SQLException {
-        List<Block> blocks = event.getBlocks();
         Player player = null;
+        List<Block> blocks = event.getBlocks();
         for (Block block : blocks) {
-            Chunk chunkBeingModified = block.getChunk();
+            Block targetBlock = block.getRelative(event.getDirection());
+            Chunk chunkBeingModified = targetBlock.getChunk();
             factionClaimProtect.run(event, chunkBeingModified, player, false, false, false, false);
         }
     }
@@ -174,7 +194,11 @@ public final class SimpleFactions extends JavaPlugin implements Listener {
     @EventHandler
     public void onBlockPistonRetractEvent (BlockPistonRetractEvent event) throws SQLException {
         Player player = null;
-        factionClaimProtect.run(event, event.getBlock().getChunk(), player, false, false, false, false);
+        List<Block> blocks = event.getBlocks();
+        for (Block block : blocks) {
+            Chunk chunkBeingModified = block.getChunk();
+            factionClaimProtect.run(event, chunkBeingModified, player, false, false, false, false);
+        }
     }
 
     @EventHandler
@@ -192,13 +216,17 @@ public final class SimpleFactions extends JavaPlugin implements Listener {
     @EventHandler
     public void onEntityChangeBlockEvent (EntityChangeBlockEvent event) throws SQLException {
         Player player = null;
-        factionClaimProtect.run(event, event.getBlock().getChunk(), player, false, false, false, false);
+        factionClaimProtect.run(event, event.getBlock().getChunk(), player, false, false, true, false);
     }
 
     @EventHandler
     public void onEntityDamageByEntityEvent (EntityDamageByEntityEvent event) throws SQLException {
         Chunk chunkBeingModified = event.getEntity().getChunk();
         Player player = null;
+        if (event.getEntity() instanceof LivingEntity && !(event.getEntity() instanceof Player)) {
+            return;
+        }
+
         factionClaimProtect.run(event, chunkBeingModified, player, true, false, true, false);
     }
 
@@ -239,21 +267,36 @@ public final class SimpleFactions extends JavaPlugin implements Listener {
     public void onHangingBreakEvent (HangingBreakEvent event) throws SQLException {
         Chunk chunkBeingModified = event.getEntity().getChunk();
         Player player = null;
-        factionClaimProtect.run(event, chunkBeingModified, player, false, false, false, false);
+        factionClaimProtect.run(event, chunkBeingModified, player, false, false, true, false);
     }
 
     @EventHandler
     public void onFoodLevelChangeEvent (FoodLevelChangeEvent event) throws SQLException {
         Chunk chunkBeingModified = event.getEntity().getChunk();
-        Player player = null;
-        factionClaimProtect.run(event, chunkBeingModified, player, true, false, true, false);
+        if (!(event.getEntity() instanceof Player player)) {
+            return;
+        }
+        int oldFood = player.getFoodLevel();
+        int newFood = event.getFoodLevel();
+
+        boolean allowSafezone = false;
+        if (newFood >= oldFood) {
+            allowSafezone = true;
+        }
+        factionClaimProtect.run(event, chunkBeingModified, player, true, allowSafezone, true, true);
     }
 
     @EventHandler
     public void onPotionSplashEvent (PotionSplashEvent event) throws SQLException {
-        Chunk chunkBeingModified = event.getEntity().getChunk();
-        Player player = null;
-        factionClaimProtect.run(event, chunkBeingModified, player, true, false, true, false);
+        for (LivingEntity target : event.getAffectedEntities()) {
+            if (target instanceof Player) {
+                Chunk chunk = target.getLocation().getChunk();
+                FactionChunk fChunk = db.selectFactionUsingChunk(chunk.getX(), chunk.getZ());
+                if (fChunk != null && fChunk.factionName.equalsIgnoreCase("safezone")) {
+                    event.setIntensity(target, 0.0);
+                }
+            }
+        }
     }
 
     @EventHandler
