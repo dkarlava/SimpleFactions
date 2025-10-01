@@ -1,13 +1,14 @@
 package daveiiii.simpleFactions.data;
 import daveiiii.simpleFactions.data.namedQueries.faction.insert.InsertFaction;
-import daveiiii.simpleFactions.data.namedQueries.faction.select.SelectFactionByName;
-import daveiiii.simpleFactions.data.namedQueries.faction.select.SelectFactionByPlayerId;
+import daveiiii.simpleFactions.data.namedQueries.faction.select.*;
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.create.CreateFactionChunk;
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.create.CreateFactionSafeZoneWarZoneChunk;
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.delete.DeleteFactionChunk;
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.select.SelectAllFactionClaims;
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.select.SelectFactionUsingChunk;
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.select.SelectNearbyChunks;
+import daveiiii.simpleFactions.data.namedQueries.factionChunk.update.UpdateFactionChunk;
+import daveiiii.simpleFactions.data.namedQueries.factionChunk.update.UpdateFactionSafeZoneWarZoneChunk;
 import daveiiii.simpleFactions.data.namedQueries.factionDisband.delete.DeleteFactionDisband;
 import daveiiii.simpleFactions.data.namedQueries.factionDisband.insert.InsertFactionDisband;
 import daveiiii.simpleFactions.data.namedQueries.factionDisband.select.SelectFactionDisbandedPrimed;
@@ -25,8 +26,6 @@ import daveiiii.simpleFactions.data.namedQueries.playerData.update.UpdateIncreas
 import daveiiii.simpleFactions.data.namedQueries.playerData.update.UpdatePlayerDataAutoMap;
 import daveiiii.simpleFactions.data.namedQueries.playerData.update.UpdatePlayerPower;
 import daveiiii.simpleFactions.data.namedQueries.tables.*;
-import daveiiii.simpleFactions.data.namedQueries.faction.select.SelectTotalFactionPageNumber;
-import daveiiii.simpleFactions.data.namedQueries.faction.select.SelectFactionPage;
 import daveiiii.simpleFactions.data.namedQueries.factionMember.delete.DeleteFactionMember;
 import daveiiii.simpleFactions.data.namedQueries.factionMember.select.SelectFactionMember;
 import types.*;
@@ -160,11 +159,11 @@ public class DataBaseHelper {
         CreateFactionChunk.run(connection, factionId, x, z);
     }
 
-    public void createFactionSafeZoneChunk (int x, int z) throws SQLException {
+    public void createFactionSafezoneChunk (int x, int z) throws SQLException {
         CreateFactionSafeZoneWarZoneChunk.run(connection, "safezone", x, z);
     }
 
-    public void createFactionWarZoneChunk (int x, int z) throws SQLException {
+    public void createFactionWarzoneChunk (int x, int z) throws SQLException {
         CreateFactionSafeZoneWarZoneChunk.run(connection, "warzone", x, z);
     }
 
@@ -194,6 +193,22 @@ public class DataBaseHelper {
 
     public boolean selectPlayerDataAutoMap (UUID playerId) throws SQLException {
         return SelectPlayerDataAutoMap.run(connection, playerId);
+    }
+
+    public void updateFactionChunk (String factionId, int x, int z) throws SQLException {
+        UpdateFactionChunk.run(connection, factionId, x, z);
+    }
+
+    public Faction selectFaction (String factionId) throws SQLException {
+        return SelectFaction.run(connection, factionId);
+    }
+
+    public void updateFactionSafezoneChunk (int x, int z) throws SQLException {
+        UpdateFactionSafeZoneWarZoneChunk.run(connection, "safezone", x, z);
+    }
+
+    public void updateFactionWarzoneChunk (int x, int z) throws SQLException {
+        UpdateFactionSafeZoneWarZoneChunk.run(connection, "safezone", x, z);
     }
 
     public void close () throws SQLException {

@@ -324,7 +324,6 @@ public final class SimpleFactions extends JavaPlugin implements Listener {
         db.updatePlayerPower(playerId, currentPower);
         player.sendMessage(Component.text(String.format("Your new power is %d/%d", currentPower, config.factionMaxPowerPerPlayer), NamedTextColor.RED));
     }
-
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) throws SQLException {
         Player player = event.getPlayer();
@@ -335,6 +334,12 @@ public final class SimpleFactions extends JavaPlugin implements Listener {
         if (!fromChunk.equals(toChunk) && db.selectPlayerDataAutoMap(player.getUniqueId())) {
             MapCommand.displayMap(db, player, toChunk);
         }
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) throws SQLException {
+        Player player = event.getPlayer();
+        db.updatePlayerDataAutoMap(player.getUniqueId(), false);
     }
 
     private void initializeRepeatingTasks () {
