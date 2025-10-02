@@ -30,66 +30,68 @@ public record Claim(PluginConfig config, DataBaseHelper connection) implements B
         int centerX = chunk.getX();
         int centerZ = chunk.getZ();
 
-        if (args[0].equalsIgnoreCase("safezone") || args[0].equalsIgnoreCase("warzone")) {
-            if (!player.isOp()) {
-                // only oped players can claim for warzone/ safezone
+        if (args.length > 1) {
+            if (args[0].equalsIgnoreCase("safezone") || args[0].equalsIgnoreCase("warzone")) {
+                if (!player.isOp()) {
+                    // only oped players can claim for warzone/ safezone
+                    return;
+                }
+                String safeZoneWarZoneName = args[0];
+                int radius = 0;
+                try {
+                    radius = Integer.parseInt(args[1]);
+                } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
+                    // no-op
+                }
+                if (safeZoneWarZoneName.equalsIgnoreCase("safezone")) {
+                    try {
+                        if (radius == 0) {
+                            connection.createFactionSafezoneChunk(centerX, centerZ);
+                        } else {
+                            for (int x = centerX - radius; x <= centerX + radius; x++) {
+                                for (int z = centerZ - radius; z <= centerZ + radius; z++) {
+                                    connection.createFactionSafezoneChunk(x, z);
+                                }
+                            }
+                        }
+                    } catch (SQLException e) {
+                        if (radius == 0) {
+                            connection.updateFactionSafezoneChunk(centerX, centerZ);
+                        } else {
+                            for (int x = centerX - radius; x <= centerX + radius; x++) {
+                                for (int z = centerZ - radius; z <= centerZ + radius; z++) {
+                                    connection.updateFactionSafezoneChunk(x, z);
+                                }
+                            }
+                        }
+                    }
+                    player.sendMessage(Component.text("You claimed land for the safe zone!", NamedTextColor.GOLD));
+                } else if (safeZoneWarZoneName.equalsIgnoreCase("warzone")) {
+                    try {
+                        if (radius == 0) {
+                            connection.createFactionWarzoneChunk(centerX, centerZ);
+                        } else {
+                            for (int x = centerX - radius; x <= centerX + radius; x++) {
+                                for (int z = centerZ - radius; z <= centerZ + radius; z++) {
+                                    connection.createFactionWarzoneChunk(x, z);
+                                }
+                            }
+                        }
+                    } catch (SQLException e) {
+                        if (radius == 0) {
+                            connection.updateFactionWarzoneChunk(centerX, centerZ);
+                        } else {
+                            for (int x = centerX - radius; x <= centerX + radius; x++) {
+                                for (int z = centerZ - radius; z <= centerZ + radius; z++) {
+                                    connection.updateFactionWarzoneChunk(x, z);
+                                }
+                            }
+                        }
+                    }
+                    player.sendMessage(Component.text("You claimed land for the warzone!", NamedTextColor.DARK_RED));
+                }
                 return;
             }
-            String safeZoneWarZoneName = args[0];
-            int radius = 0;
-            try {
-                radius = Integer.parseInt(args[1]);
-            } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
-                // no-op
-            }
-            if  (safeZoneWarZoneName.equalsIgnoreCase("safezone")) {
-                try {
-                    if (radius == 0) {
-                        connection.createFactionSafezoneChunk(centerX, centerZ);
-                    } else {
-                        for (int x = centerX - radius; x <= centerX + radius; x++) {
-                            for (int z = centerZ - radius; z <= centerZ + radius; z++) {
-                                connection.createFactionSafezoneChunk(x, z);
-                            }
-                        }
-                    }
-                } catch (SQLException e) {
-                    if (radius == 0) {
-                        connection.updateFactionSafezoneChunk(centerX, centerZ);
-                    } else {
-                        for (int x = centerX - radius; x <= centerX + radius; x++) {
-                            for (int z = centerZ - radius; z <= centerZ + radius; z++) {
-                                connection.updateFactionSafezoneChunk(x, z);
-                            }
-                        }
-                    }
-                }
-                player.sendMessage(Component.text("You claimed land for the safe zone!", NamedTextColor.GOLD));
-            } else if (safeZoneWarZoneName.equalsIgnoreCase("warzone")) {
-                try {
-                    if (radius == 0) {
-                        connection.createFactionWarzoneChunk(centerX, centerZ);
-                    } else {
-                        for (int x = centerX - radius; x <= centerX + radius; x++) {
-                            for (int z = centerZ - radius; z <= centerZ + radius; z++) {
-                                connection.createFactionWarzoneChunk(x, z);
-                            }
-                        }
-                    }
-                } catch (SQLException e) {
-                    if (radius == 0) {
-                        connection.updateFactionWarzoneChunk(centerX, centerZ);
-                    } else {
-                        for (int x = centerX - radius; x <= centerX + radius; x++) {
-                            for (int z = centerZ - radius; z <= centerZ + radius; z++) {
-                                connection.updateFactionWarzoneChunk(x, z);
-                            }
-                        }
-                    }
-                }
-                player.sendMessage(Component.text("You claimed land for the warzone!", NamedTextColor.DARK_RED));
-            }
-            return;
         }
 
         if (args.length > 1) {

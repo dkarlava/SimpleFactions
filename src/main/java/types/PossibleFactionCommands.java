@@ -12,7 +12,8 @@ public enum PossibleFactionCommands {
     Power("power"),
     Map("map"),
     Claim("claim"),
-    Unclaim("unclaim");
+    Unclaim("unclaim"),
+    SetPower("setpower");
     private final String command;
     PossibleFactionCommands (String command) {
         this.command = command;

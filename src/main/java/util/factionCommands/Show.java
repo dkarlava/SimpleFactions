@@ -20,8 +20,9 @@ import java.util.stream.Collectors;
 public record Show (PluginConfig config, DataBaseHelper connection) implements BaseFactionCommand {
     @Override
     public void execute(CommandSender sender, String[] args) throws SQLException {
-        if (!(sender instanceof Player)) {
+        if (!(sender instanceof Player player)) {
             sender.sendMessage(Component.text("Only players can execute this command!"));
+            return;
         }
 
         // TODO: allow show for other factions
@@ -30,8 +31,6 @@ public record Show (PluginConfig config, DataBaseHelper connection) implements B
             return;
         }
 
-        assert sender instanceof Player;
-        Player player = (Player) sender;
         UUID playerId = player.getUniqueId();
 
         Faction factionDetails = connection.selectFactionByPlayerId(playerId);
@@ -57,7 +56,7 @@ public record Show (PluginConfig config, DataBaseHelper connection) implements B
             .toList();
 
         String factionCoOwnersAsString = factionCoOwners.stream()
-            .map(fP -> Objects.requireNonNull(Bukkit.getPlayer(fP.playerId)).getName()) // extract the names
+            .map(fP -> Objects.requireNonNull(Bukkit.getOfflinePlayer(fP.playerId)).getName()) // extract the names
             .collect(Collectors.joining(", "));
 
         List<FactionPlayer> factionElders = factionPlayers.stream()
@@ -65,7 +64,7 @@ public record Show (PluginConfig config, DataBaseHelper connection) implements B
             .toList();
 
         String factionEldersAsString = factionElders.stream()
-            .map(fP -> Objects.requireNonNull(Bukkit.getPlayer(fP.playerId)).getName()) // extract the names
+            .map(fP -> Objects.requireNonNull(Bukkit.getOfflinePlayer(fP.playerId)).getName()) // extract the names
             .collect(Collectors.joining(", "));
 
         List<FactionPlayer> factionMembers = factionPlayers.stream()
@@ -73,7 +72,7 @@ public record Show (PluginConfig config, DataBaseHelper connection) implements B
             .toList();
 
         String factionMembersAsString = factionMembers.stream()
-            .map(fP -> Objects.requireNonNull(Bukkit.getPlayer(fP.playerId)).getName()) // extract the names
+            .map(fP -> Objects.requireNonNull(Bukkit.getOfflinePlayer(fP.playerId)).getName()) // extract the names
             .collect(Collectors.joining(", "));
 
         int maxPossiblePower = factionPlayers.size() * config.factionMaxPowerPerPlayer;
@@ -83,7 +82,7 @@ public record Show (PluginConfig config, DataBaseHelper connection) implements B
         // TODO: format this make it centered if possible, add some nice headers
         player.sendMessage(Component.text("-----------------\n", NamedTextColor.GOLD)
             .append(Component.text(String.format("Name: %s\n", factionDetails.name), NamedTextColor.GOLD))
-            .append(Component.text(String.format("Owner: %s\n", Objects.requireNonNull(Bukkit.getPlayer(factionOwner.playerId)).getName()), NamedTextColor.GOLD))
+            .append(Component.text(String.format("Owner: %s\n", Objects.requireNonNull(Bukkit.getOfflinePlayer(factionOwner.playerId)).getName()), NamedTextColor.GOLD))
             .append(Component.text(String.format("Co-Owners: %s\n", factionCoOwnersAsString), NamedTextColor.GOLD))
             .append(Component.text(String.format("Elders: %s\n", factionEldersAsString), NamedTextColor.GOLD))
             .append(Component.text(String.format("Members: %s\n", factionMembersAsString), NamedTextColor.GOLD))

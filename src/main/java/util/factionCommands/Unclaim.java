@@ -30,66 +30,68 @@ public record Unclaim(PluginConfig config, DataBaseHelper connection) implements
         int centerX = chunk.getX();
         int centerZ = chunk.getZ();
 
-        if (args[0].equalsIgnoreCase("safezone") || args[0].equalsIgnoreCase("warzone")) {
-            if (!player.isOp()) {
-                // only oped players can unclaim for warzone/ safezone
+        if (args.length > 1) {
+            if (args[0].equalsIgnoreCase("safezone") || args[0].equalsIgnoreCase("warzone")) {
+                if (!player.isOp()) {
+                    // only oped players can unclaim for warzone/ safezone
+                    return;
+                }
+                String safeZoneWarZoneName = args[0];
+                int radius = 0;
+                try {
+                    radius = Integer.parseInt(args[1]);
+                } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
+                    // no-op
+                }
+                if (safeZoneWarZoneName.equalsIgnoreCase("safezone")) {
+                    try {
+                        if (radius == 0) {
+                            connection.deleteFactionChunk(centerX, centerZ);
+                        } else {
+                            for (int x = centerX - radius; x <= centerX + radius; x++) {
+                                for (int z = centerZ - radius; z <= centerZ + radius; z++) {
+                                    connection.deleteFactionChunk(x, z);
+                                }
+                            }
+                        }
+                    } catch (SQLException e) {
+                        if (radius == 0) {
+                            connection.deleteFactionChunk(centerX, centerZ);
+                        } else {
+                            for (int x = centerX - radius; x <= centerX + radius; x++) {
+                                for (int z = centerZ - radius; z <= centerZ + radius; z++) {
+                                    connection.deleteFactionChunk(x, z);
+                                }
+                            }
+                        }
+                    }
+                    player.sendMessage(Component.text("You unclaimed land from the safe zone!", NamedTextColor.GOLD));
+                } else if (safeZoneWarZoneName.equalsIgnoreCase("warzone")) {
+                    try {
+                        if (radius == 0) {
+                            connection.deleteFactionChunk(centerX, centerZ);
+                        } else {
+                            for (int x = centerX - radius; x <= centerX + radius; x++) {
+                                for (int z = centerZ - radius; z <= centerZ + radius; z++) {
+                                    connection.deleteFactionChunk(x, z);
+                                }
+                            }
+                        }
+                    } catch (SQLException e) {
+                        if (radius == 0) {
+                            connection.deleteFactionChunk(centerX, centerZ);
+                        } else {
+                            for (int x = centerX - radius; x <= centerX + radius; x++) {
+                                for (int z = centerZ - radius; z <= centerZ + radius; z++) {
+                                    connection.deleteFactionChunk(x, z);
+                                }
+                            }
+                        }
+                    }
+                    player.sendMessage(Component.text("You unclaimed land from the war zone!", NamedTextColor.DARK_RED));
+                }
                 return;
             }
-            String safeZoneWarZoneName = args[0];
-            int radius = 0;
-            try {
-                radius = Integer.parseInt(args[1]);
-            } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
-                // no-op
-            }
-            if  (safeZoneWarZoneName.equalsIgnoreCase("safezone")) {
-                try {
-                    if (radius == 0) {
-                        connection.deleteFactionChunk(centerX, centerZ);
-                    } else {
-                        for (int x = centerX - radius; x <= centerX + radius; x++) {
-                            for (int z = centerZ - radius; z <= centerZ + radius; z++) {
-                                connection.deleteFactionChunk(x, z);
-                            }
-                        }
-                    }
-                } catch (SQLException e) {
-                    if (radius == 0) {
-                        connection.deleteFactionChunk(centerX, centerZ);
-                    } else {
-                        for (int x = centerX - radius; x <= centerX + radius; x++) {
-                            for (int z = centerZ - radius; z <= centerZ + radius; z++) {
-                                connection.deleteFactionChunk(x, z);
-                            }
-                        }
-                    }
-                }
-                player.sendMessage(Component.text("You unclaimed land from the safe zone!", NamedTextColor.GOLD));
-            } else if (safeZoneWarZoneName.equalsIgnoreCase("warzone")) {
-                try {
-                    if (radius == 0) {
-                        connection.deleteFactionChunk(centerX, centerZ);
-                    } else {
-                        for (int x = centerX - radius; x <= centerX + radius; x++) {
-                            for (int z = centerZ - radius; z <= centerZ + radius; z++) {
-                                connection.deleteFactionChunk(x, z);
-                            }
-                        }
-                    }
-                } catch (SQLException e) {
-                    if (radius == 0) {
-                        connection.deleteFactionChunk(centerX, centerZ);
-                    } else {
-                        for (int x = centerX - radius; x <= centerX + radius; x++) {
-                            for (int z = centerZ - radius; z <= centerZ + radius; z++) {
-                                connection.deleteFactionChunk(x, z);
-                            }
-                        }
-                    }
-                }
-                player.sendMessage(Component.text("You unclaimed land from the war zone!", NamedTextColor.DARK_RED));
-            }
-            return;
         }
 
         if (args.length > 1) {
