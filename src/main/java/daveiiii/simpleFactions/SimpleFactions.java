@@ -4,13 +4,11 @@ import daveiiii.simpleFactions.commands.FactionsCommandManager;
 import daveiiii.simpleFactions.data.DataBaseHelper;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Bukkit;
-import org.bukkit.Chunk;
-import org.bukkit.Material;
-import org.bukkit.Tag;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
 import org.bukkit.event.entity.*;
@@ -20,8 +18,7 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
-import types.FactionChunk;
-import types.PluginConfig;
+import types.*;
 import util.factionCommands.FactionCommandTabCompleter;
 import util.factionCommands.MapCommand;
 import util.other.FactionClaimProtect;
@@ -32,6 +29,9 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+
+// TODO: Owner can leave faction with /f leave. needs to either disband or give owner to someone else
+// TODO: need to be able to unset f home
 
 public final class SimpleFactions extends JavaPlugin implements Listener {
 
@@ -70,13 +70,12 @@ public final class SimpleFactions extends JavaPlugin implements Listener {
     }
 
     @EventHandler
-    public void onPlayerJoin (PlayerJoinEvent event) {
-        try {
-            if (db.selectPlayerData(event.getPlayer().getUniqueId()) == null) {
-                db.insertPlayerData(event.getPlayer().getUniqueId());
-            }
-        } catch (SQLException e) {
-            logger.severe(e.toString());
+    public void onPlayerJoin (PlayerJoinEvent event) throws SQLException {
+        Player player = event.getPlayer();
+        UUID uuid = player.getUniqueId();
+        db.updatePlayerDataAutoMap(uuid, false);
+        if (db.selectPlayerData(uuid) == null) {
+            db.insertPlayerData(uuid);
         }
     }
 
@@ -336,10 +335,27 @@ public final class SimpleFactions extends JavaPlugin implements Listener {
         }
     }
 
-    @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent event) throws SQLException {
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onRespawn(PlayerRespawnEvent event) throws SQLException {
         Player player = event.getPlayer();
-        db.updatePlayerDataAutoMap(player.getUniqueId(), false);
+        UUID playerId = player.getUniqueId();
+        FactionPlayer factionPlayer = db.selectFactionPlayerMember(playerId);
+        if (factionPlayer == null || factionPlayer.rank == PlayerRank.Member) {
+            return;
+        }
+        FactionHome factionHome = db.selectFactionHome(factionPlayer.factionId);
+        if (factionHome == null || (factionHome.x == 0 && factionHome.z == 0)) {
+            return;
+        }
+        Location loc = new Location(
+            Bukkit.getWorld("world"),
+            factionHome.x,
+            factionHome.y,
+            factionHome.z,
+            factionHome.yaw,
+            factionHome.pitch
+        );
+        event.setRespawnLocation(loc);
     }
 
     private void initializeRepeatingTasks () {

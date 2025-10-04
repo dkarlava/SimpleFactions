@@ -45,7 +45,8 @@ public record Home(PluginConfig config, DataBaseHelper connection) implements Ba
         }
 
         FactionHome factionHome = connection.selectFactionHome(factionPlayer.factionId);
-        if (factionHome == null) {
+        // if the faction home is not set then the nulls get treated as zeros. Checking that here
+        if (factionHome == null || (factionHome.x == 0 && factionHome.z == 0)) {
             player.sendMessage(Component.text("Your faction does not have a faction home.",  NamedTextColor.RED));
             return;
         }

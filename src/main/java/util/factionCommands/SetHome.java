@@ -3,9 +3,11 @@ package util.factionCommands;
 import daveiiii.simpleFactions.data.DataBaseHelper;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import types.FactionChunk;
 import types.FactionPlayer;
 import types.PlayerRank;
 import types.PluginConfig;
@@ -29,6 +31,13 @@ public record SetHome(PluginConfig config, DataBaseHelper connection) implements
         FactionPlayer factionPlayer =  connection.selectFactionPlayerMember(player.getUniqueId());
         if (factionPlayer == null || factionPlayer.factionId == null) {
             player.sendMessage(Component.text("You must be in a faction to run this command.", NamedTextColor.RED));
+            return;
+        }
+
+        Chunk chunk = player.getChunk();
+        FactionChunk factionChunk = connection.selectFactionUsingChunk(chunk.getX(),  chunk.getZ());
+        if (factionChunk == null || !factionChunk.factionId.equals(factionPlayer.factionId)) {
+            sender.sendMessage(Component.text("You cannot set the faction home here.", NamedTextColor.RED));
             return;
         }
 

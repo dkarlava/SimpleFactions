@@ -11,7 +11,12 @@ public class CreateFactionTable {
             CREATE TABLE IF NOT EXISTS faction (
                 id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
                 name TEXT NOT NULL,
-                name_unique UNIQUE NOT NULL
+                name_unique UNIQUE NOT NULL,
+                home_x REAL DEFAULT NULL,
+                home_y REAL DEFAULT NULL,
+                home_z REAL DEFAULT NULL,
+                home_yaw REAL DEFAULT NULL,
+                home_pitch REAL DEFAULT NULL
             )
         """;
 
