@@ -1,6 +1,7 @@
 package daveiiii.simpleFactions.data;
 import daveiiii.simpleFactions.data.namedQueries.faction.insert.InsertFaction;
 import daveiiii.simpleFactions.data.namedQueries.faction.select.*;
+import daveiiii.simpleFactions.data.namedQueries.faction.update.UpdateFactionHome;
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.create.CreateFactionChunk;
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.create.CreateFactionSafeZoneWarZoneChunk;
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.delete.DeleteAllFactionLand;
@@ -73,6 +74,8 @@ public class DataBaseHelper {
         logger.info("CreateFactionChunkTable created");
         AlterCreatePlayerData.run(connection);
         logger.info("AlterCreatePlayerData altered");
+        AlterFaction.run(connection);
+        logger.info("AlterFaction altered");
         logger.info("========== DATABASE INITIALIZED ==========");
     }
 
@@ -214,6 +217,14 @@ public class DataBaseHelper {
 
     public void deleteAllFactionLand (String factionId) throws SQLException {
         DeleteAllFactionLand.run(connection, factionId);
+    }
+
+    public void updateFactionHome (String factionId, double x, double y, double z, float yaw, float pitch) throws SQLException {
+        UpdateFactionHome.run(connection, factionId, x, y, z, yaw, pitch);
+    }
+
+    public FactionHome selectFactionHome (String factionId) throws SQLException {
+        return SelectFactionHome.run(connection, factionId);
     }
 
     public void close () throws SQLException {
