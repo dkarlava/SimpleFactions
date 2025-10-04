@@ -110,17 +110,19 @@ public record Unclaim(PluginConfig config, DataBaseHelper connection) implements
             return;
         }
 
-        if (args[0].equalsIgnoreCase("all")) {
-            connection.deleteAllFactionLand(factionPlayer.factionId);
-            BroadcastMessageToFactionMembers.run(connection, factionPlayer.factionId, Component.text(String.format("%s just unclaimed all the factions land!", player.getName()), NamedTextColor.RED));
-            return;
-        }
-
         int radius = 0;
-        try {
-            radius = Integer.parseInt(args[0]);
-        } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
-            // no-op
+        if (args.length == 1) {
+            if (args[0].equalsIgnoreCase("all")) {
+                connection.deleteAllFactionLand(factionPlayer.factionId);
+                BroadcastMessageToFactionMembers.run(connection, factionPlayer.factionId, Component.text(String.format("%s just unclaimed all the factions land!", player.getName()), NamedTextColor.RED));
+                return;
+            } else {
+                try {
+                    radius = Integer.parseInt(args[0]);
+                } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
+                    // no-op
+                }
+            }
         }
 
         FactionChunk factionChunk = connection.selectFactionUsingChunk(centerX, centerZ);

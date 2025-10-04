@@ -12,6 +12,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
 import org.bukkit.event.entity.*;
+import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.InventoryHolder;
@@ -151,9 +152,14 @@ public final class SimpleFactions extends JavaPlugin implements Listener {
             return;
         }
 
+        boolean allowWarzone = true;
+        if (event.getCause() == EntityDamageEvent.DamageCause.FALL) {
+            allowWarzone = false;
+        }
+
         Chunk chunkBeingModified = player.getChunk();
 
-        factionClaimProtect.run(event, chunkBeingModified, player, true, false, true, true);
+        factionClaimProtect.run(event, chunkBeingModified, player, allowWarzone, false, true, true);
     }
 
     @EventHandler
@@ -265,9 +271,30 @@ public final class SimpleFactions extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onHangingBreakEvent (HangingBreakEvent event) throws SQLException {
+        // handled elsewhere
+        if (event instanceof HangingBreakByEntityEvent) {
+            return;
+        }
         Chunk chunkBeingModified = event.getEntity().getChunk();
         Player player = null;
         factionClaimProtect.run(event, chunkBeingModified, player, false, false, true, false);
+    }
+
+    @EventHandler
+    public void onHangingBreakByEntity(HangingBreakByEntityEvent event) throws SQLException {
+        Entity remover = event.getRemover();
+        Chunk chunkBeingModified = event.getEntity().getChunk();
+        boolean allowWarzone = false;
+        boolean allowSafezone = false;
+        Player player = null;
+        if (remover instanceof Player) {
+            player = (Player) remover;
+            if (player.isOp()) {
+                allowWarzone = true;
+                allowSafezone = true;
+            }
+        }
+        factionClaimProtect.run(event, chunkBeingModified, player, allowWarzone, allowSafezone, true, false);
     }
 
     @EventHandler
