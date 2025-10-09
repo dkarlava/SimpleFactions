@@ -31,7 +31,7 @@ faction-land-claim-cost: 1
 faction-death-power-lose: 4
 
 # Add link for /discord command. If not set "This server does not have a discord." will be sent to players. Ex: https://discord.gg/someCode
-discord-link:
+discord-link: null
 
 # Faction claim protections. There is no config here, just info
 #  BlockBreakEvent: Player breaking blocks -> TRUE

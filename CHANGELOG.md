@@ -1,4 +1,9 @@
 # CHANGELOG
+## From `1.0.0` to `1.0.1`
+### Bugs
+- Fixed broken /discord command
+
+---
 ## From `alpha-v1.1.0` to `1.0.0`
   Yes, I skipped beta. But my server that is running this plugin (`play-aetherion.net`) was released so I decided to release this too.
   ### Bugs

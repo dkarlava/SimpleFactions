@@ -1,6 +1,8 @@
 package daveiiii.simpleFactions.commands;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -27,7 +29,10 @@ public record DiscordCommandManager(PluginConfig config) implements CommandExecu
             player.sendMessage(Component.text("This server does not have a discord.", NamedTextColor.RED));
             return true;
         }
-        player.sendMessage(Component.text(String.format("Join the discord using: %s", config.discordLink), NamedTextColor.GREEN));
+        Component message = Component.text("Click here to join the discord!", NamedTextColor.GREEN)
+            .hoverEvent(HoverEvent.showText(Component.text(config.discordLink)))
+            .clickEvent(ClickEvent.openUrl(config.discordLink));
+        player.sendMessage(message);
         return true;
     }
 }
