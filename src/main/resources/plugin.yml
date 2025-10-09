@@ -7,3 +7,5 @@ depend:
 commands:
   f:
     usage: /f <subcommand>
+  discord:
+    usage: /discord

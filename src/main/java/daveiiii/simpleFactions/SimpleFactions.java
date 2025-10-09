@@ -1,5 +1,6 @@
 package daveiiii.simpleFactions;
 
+import daveiiii.simpleFactions.commands.DiscordCommandManager;
 import daveiiii.simpleFactions.commands.FactionsCommandManager;
 import daveiiii.simpleFactions.data.DataBaseHelper;
 import net.kyori.adventure.text.Component;
@@ -52,8 +53,9 @@ public final class SimpleFactions extends JavaPlugin implements Listener {
         config = new PluginConfig(getConfig());
 
         this.saveDefaultConfig();
-        logger.info("SimpleFactions has been enabled! AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+        logger.info("SimpleFactions has been enabled!");
         factionClaimProtect = new FactionClaimProtect (logger, db);
+        Objects.requireNonNull(this.getCommand("discord")).setExecutor(new DiscordCommandManager(config));
         Objects.requireNonNull(this.getCommand("f")).setExecutor(new FactionsCommandManager(config, db, logger));
         Objects.requireNonNull(this.getCommand("f")).setTabCompleter(new FactionCommandTabCompleter());
         getServer().getPluginManager().registerEvents(this, this);
@@ -229,11 +231,18 @@ public final class SimpleFactions extends JavaPlugin implements Listener {
     public void onEntityDamageByEntityEvent (EntityDamageByEntityEvent event) throws SQLException {
         Chunk chunkBeingModified = event.getEntity().getChunk();
         Player player = null;
+        boolean allowWarzone = true;
+        boolean allowSafezone = false;
         if (event.getEntity() instanceof LivingEntity && !(event.getEntity() instanceof Player)) {
             return;
         }
+        if (event.getDamager() instanceof Player maybePlayer) {
+            if (maybePlayer.isOp()) {
+                allowSafezone = true;
+            }
+        }
 
-        factionClaimProtect.run(event, chunkBeingModified, player, true, false, true, false);
+        factionClaimProtect.run(event, chunkBeingModified, player, allowWarzone, allowSafezone, true, false);
     }
 
     @EventHandler

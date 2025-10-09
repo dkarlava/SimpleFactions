@@ -1,4 +1,15 @@
 # CHANGELOG
+## From `alpha-v1.1.0` to `1.0.0`
+  Yes, I skipped beta. But my server that is running this plugin (`play-aetherion.net`) was released so I decided to release this too.
+  ### Bugs
+  - Too Many bug fixes to list
+
+  ### Features
+  - Too many features to list
+
+I'll get better about tracking this with subsequent versions :(
+
+---
 ## From `alpha-v1.0.1` to `alpha-v1.1.0`
   ### Bugs
   - Fixed an issue where players could claim land from the safezone/ warzone
