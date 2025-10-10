@@ -41,7 +41,7 @@ public class FactionClaimProtect {
 
         FactionChunk fChunk = connection.selectFactionUsingChunk(chunkBeingModified.getX(), chunkBeingModified.getZ());
         if (fChunk == null) {
-            logger.info(String.format("Allowing %s because of no zone claim.", event.getEventName()));
+//            logger.info(String.format("Allowing %s because of no zone claim.", event.getEventName()));
             return;
         }
 
@@ -49,12 +49,12 @@ public class FactionClaimProtect {
             if (requiresPlayer) {
                 if (!initiator.isOp()) {
                     ((Cancellable) event).setCancelled(true);
-                    logger.warning(String.format("Canceling %s because safezone.", event.getEventName()));
+//                    logger.warning(String.format("Canceling %s because safezone.", event.getEventName()));
                     return;
                 }
             } else {
                 ((Cancellable) event).setCancelled(true);
-                logger.warning(String.format("Canceling %s because safezone.", event.getEventName()));
+//                logger.warning(String.format("Canceling %s because safezone.", event.getEventName()));
                 return;
             }
         }
@@ -63,12 +63,12 @@ public class FactionClaimProtect {
             if (requiresPlayer) {
                 if (!initiator.isOp()) {
                     ((Cancellable) event).setCancelled(true);
-                    logger.warning(String.format("Canceling %s because warzone.", event.getEventName()));
+//                    logger.warning(String.format("Canceling %s because warzone.", event.getEventName()));
                     return;
                 }
             } else {
                 ((Cancellable) event).setCancelled(true);
-                logger.warning(String.format("Canceling %s because warzone.", event.getEventName()));
+//                logger.warning(String.format("Canceling %s because warzone.", event.getEventName()));
                 return;
             }
         }
@@ -78,7 +78,7 @@ public class FactionClaimProtect {
                 handleRequiresPlayerFactionClaim(initiator, event);
             } else {
                 ((Cancellable) event).setCancelled(true);
-                logger.warning(String.format("Canceling %s because chunk is claimed.", event.getEventName()));
+//                logger.warning(String.format("Canceling %s because chunk is claimed.", event.getEventName()));
             }
         }
     }
@@ -86,7 +86,7 @@ public class FactionClaimProtect {
     private void handleRequiresPlayerFactionClaim (Player initiator, Event event) {
         if (!initiator.isOp()) {
             ((Cancellable) event).setCancelled(true);
-            logger.warning(String.format("Canceling %s because chunk is claimed.", event.getEventName()));
+//            logger.warning(String.format("Canceling %s because chunk is claimed.", event.getEventName()));
         }
     }
 }

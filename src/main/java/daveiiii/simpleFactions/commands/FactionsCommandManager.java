@@ -41,6 +41,7 @@ public class FactionsCommandManager implements CommandExecutor {
         commandMap.put(PossibleFactionCommands.Home, new Home(config, connection));
         commandMap.put(PossibleFactionCommands.Promote, new Promote(config, connection));
         commandMap.put(PossibleFactionCommands.Demote, new Demote(config, connection));
+        commandMap.put(PossibleFactionCommands.Destroy, new Destroy(config, connection));
     }
 
     @Override

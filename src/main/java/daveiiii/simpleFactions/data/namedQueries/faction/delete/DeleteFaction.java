@@ -1,4 +1,4 @@
-package daveiiii.simpleFactions.data.namedQueries.factionDisband.delete;
+package daveiiii.simpleFactions.data.namedQueries.faction.delete;
 
 import daveiiii.simpleFactions.data.namedQueries.BaseQuery;
 
@@ -7,39 +7,26 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class DeleteFactionDisband extends BaseQuery {
-    public static String run (Connection connection, String factionDisbandId) throws SQLException {
+public class DeleteFaction extends BaseQuery {
+    public static String run (Connection connection, String factionId) throws SQLException {
         try {
             connection.setAutoCommit(false);
-
-            // Getting faction id
-            String getFactionIdQuery = "SELECT faction_id FROM faction_disband WHERE id = ?";
-            String factionId;
-            try (PreparedStatement stmt = connection.prepareStatement(getFactionIdQuery)) {
-                stmt.setString(1, factionDisbandId);
-                try (ResultSet rs = stmt.executeQuery()) {
-                    if (!rs.next()) {
-                        throw new SQLException("getFactionIdQuery query expected a result");
-                    }
-                    factionId = rs.getString("faction_id");
-                }
-            }
 
             // Deleting all members of the faction
             String deleteFactionMemberQuery = "DELETE FROM faction_member WHERE faction_id = ? RETURNING id";
             try (PreparedStatement stmt = connection.prepareStatement(deleteFactionMemberQuery)) {
                 stmt.setString(1, factionId);
-                try (ResultSet rs = stmt.executeQuery()) {
-                    if (!rs.next()) {
-                        throw new SQLException("getFactionIdQuery query expected a result");
-                    }
-                }
+                stmt.executeQuery();
             }
 
             // Deleting faction disband record
-            String deleteFactionDisbandQuery = "DELETE FROM faction_disband WHERE id = ? RETURNING id";
+            String deleteFactionDisbandQuery = """
+                DELETE FROM faction_disband
+               WHERE faction_id = ?
+               RETURNING id;
+            """;
             try (PreparedStatement stmt = connection.prepareStatement(deleteFactionDisbandQuery)) {
-                stmt.setString(1, factionDisbandId);
+                stmt.setString(1, factionId);
                 stmt.executeQuery();
             }
 

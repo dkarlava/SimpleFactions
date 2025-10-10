@@ -23,9 +23,11 @@ public record ListCommand(PluginConfig config, DataBaseHelper connection) implem
             if  (args.length == 1) {
                 pageNumber = Integer.parseInt(args[0]);
             }
-            int maxPageNumber = connection.selectTotalFactionPageNumber();
+            // subtracting 2 for safezone and warzone
+            int maxPageNumber = (int) Math.ceil((connection.selectTotalFactionPageNumber() - 2.0) / 10.0);
+            maxPageNumber = (maxPageNumber == 0) ? 1 : maxPageNumber;
             if (pageNumber <= 0 || pageNumber > maxPageNumber) {
-                sender.sendMessage(String.format("Invalid page number. Please use a value between 1 and %d", maxPageNumber));
+                sender.sendMessage(Component.text(String.format("Invalid page number. Please use a value between 1 and %d.", maxPageNumber), NamedTextColor.RED));
                 return;
             }
             List<Faction> factions = connection.selectFactionPage(pageNumber);
