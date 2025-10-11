@@ -1,8 +1,10 @@
 package daveiiii.simpleFactions;
 
 import daveiiii.simpleFactions.commands.DiscordCommandManager;
+import daveiiii.simpleFactions.commands.EnchantCommandManager;
 import daveiiii.simpleFactions.commands.FactionsCommandManager;
 import daveiiii.simpleFactions.data.DataBaseHelper;
+import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.*;
@@ -50,17 +52,18 @@ public final class SimpleFactions extends JavaPlugin implements Listener {
         } catch (Exception e) {
             logger.severe(e.toString());
         }
-        config = new PluginConfig(getConfig());
 
         this.saveDefaultConfig();
-        logger.info("SimpleFactions has been enabled!");
+        config = new PluginConfig(getConfig());
+
         factionClaimProtect = new FactionClaimProtect (logger, db);
         Objects.requireNonNull(this.getCommand("discord")).setExecutor(new DiscordCommandManager(config));
+        Objects.requireNonNull(this.getCommand("setenchant")).setExecutor(new EnchantCommandManager(config));
         Objects.requireNonNull(this.getCommand("f")).setExecutor(new FactionsCommandManager(config, db, logger));
         Objects.requireNonNull(this.getCommand("f")).setTabCompleter(new FactionCommandTabCompleter());
         getServer().getPluginManager().registerEvents(this, this);
         initializeRepeatingTasks();
-
+        logger.info("SimpleFactions has been enabled!");
     }
 
     @Override
@@ -392,6 +395,42 @@ public final class SimpleFactions extends JavaPlugin implements Listener {
             factionHome.pitch
         );
         event.setRespawnLocation(loc);
+    }
+
+    @EventHandler
+    public void onPlayerChat(AsyncChatEvent event) throws SQLException {
+        Player player = event.getPlayer();
+        FactionPlayer factionPlayer = db.selectFactionPlayerMember(player.getUniqueId());
+        String displayName;
+
+        if (factionPlayer != null) {
+            String prefix = switch (factionPlayer.rank) {
+                case Owner -> "***";
+                case CoOwner -> "**";
+                case Elder -> "*";
+                default -> "";
+            };
+
+            displayName = String.format("[%s%s] %s", prefix, factionPlayer.factionName, player.getName());
+        } else {
+            displayName = player.getName();
+        }
+
+        event.renderer((source, sourceDisplayName, message, viewer) -> {
+            if (viewer instanceof Player playerViewer) {
+                try {
+                    FactionPlayer viewerFaction = db.selectFactionPlayerMember(playerViewer.getUniqueId());
+                    if (viewerFaction != null && factionPlayer != null) {
+                        if (viewerFaction.factionId.equals(factionPlayer.factionId)) {
+                            return Component.text(String.format("%s: ", displayName)).append(message).color(NamedTextColor.GREEN);
+                        }
+                    }
+                } catch (SQLException e) {
+                    // no-op
+                }
+            }
+            return Component.text(String.format("%s: ", displayName)).append(message);
+        });
     }
 
     private void initializeRepeatingTasks () {

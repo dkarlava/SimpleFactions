@@ -9,3 +9,5 @@ commands:
     usage: /f <subcommand>
   discord:
     usage: /discord
+  setenchant:
+    usage: /setenchant
