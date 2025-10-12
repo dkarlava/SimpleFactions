@@ -8,16 +8,20 @@ import org.bukkit.event.Event;
 import org.bukkit.event.block.*;
 import org.bukkit.event.entity.*;
 import types.FactionChunk;
+import types.PluginConfig;
+
 import java.sql.SQLException;
 import java.util.logging.Logger;
 
 public class FactionClaimProtect {
 
     Logger logger;
+    PluginConfig pluginConfig;
     DataBaseHelper connection;
 
-    public FactionClaimProtect(Logger logger, DataBaseHelper connection) {
+    public FactionClaimProtect(Logger logger, DataBaseHelper connection, PluginConfig config) {
         this.logger = logger;
+        this.pluginConfig = config;
         this.connection = connection;
     }
 
@@ -41,7 +45,9 @@ public class FactionClaimProtect {
 
         FactionChunk fChunk = connection.selectFactionUsingChunk(chunkBeingModified.getX(), chunkBeingModified.getZ());
         if (fChunk == null) {
-//            logger.info(String.format("Allowing %s because of no zone claim.", event.getEventName()));
+            if (pluginConfig.debug) {
+                logger.info(String.format("Allowing %s because of no zone claim.", event.getEventName()));
+            }
             return;
         }
 
@@ -49,12 +55,16 @@ public class FactionClaimProtect {
             if (requiresPlayer) {
                 if (!initiator.isOp()) {
                     ((Cancellable) event).setCancelled(true);
-//                    logger.warning(String.format("Canceling %s because safezone.", event.getEventName()));
+                    if (pluginConfig.debug) {
+                        logger.warning(String.format("Canceling %s because safezone.", event.getEventName()));
+                    }
                     return;
                 }
             } else {
                 ((Cancellable) event).setCancelled(true);
-//                logger.warning(String.format("Canceling %s because safezone.", event.getEventName()));
+                if (pluginConfig.debug) {
+                    logger.warning(String.format("Canceling %s because safezone.", event.getEventName()));
+                }
                 return;
             }
         }
@@ -63,12 +73,16 @@ public class FactionClaimProtect {
             if (requiresPlayer) {
                 if (!initiator.isOp()) {
                     ((Cancellable) event).setCancelled(true);
-//                    logger.warning(String.format("Canceling %s because warzone.", event.getEventName()));
+                    if (pluginConfig.debug) {
+                        logger.warning(String.format("Canceling %s because warzone.", event.getEventName()));
+                    }
                     return;
                 }
             } else {
                 ((Cancellable) event).setCancelled(true);
-//                logger.warning(String.format("Canceling %s because warzone.", event.getEventName()));
+                if (pluginConfig.debug) {
+                    logger.warning(String.format("Canceling %s because warzone.", event.getEventName()));
+                }
                 return;
             }
         }
@@ -78,7 +92,9 @@ public class FactionClaimProtect {
                 handleRequiresPlayerFactionClaim(initiator, event);
             } else {
                 ((Cancellable) event).setCancelled(true);
-//                logger.warning(String.format("Canceling %s because chunk is claimed.", event.getEventName()));
+                if (pluginConfig.debug) {
+                    logger.warning(String.format("Canceling %s because chunk is claimed.", event.getEventName()));
+                }
             }
         }
     }
@@ -86,7 +102,9 @@ public class FactionClaimProtect {
     private void handleRequiresPlayerFactionClaim (Player initiator, Event event) {
         if (!initiator.isOp()) {
             ((Cancellable) event).setCancelled(true);
-//            logger.warning(String.format("Canceling %s because chunk is claimed.", event.getEventName()));
+            if (pluginConfig.debug) {
+                logger.warning(String.format("Canceling %s because chunk is claimed.", event.getEventName()));
+            }
         }
     }
 }

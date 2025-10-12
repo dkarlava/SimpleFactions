@@ -56,7 +56,7 @@ public final class SimpleFactions extends JavaPlugin implements Listener {
         this.saveDefaultConfig();
         config = new PluginConfig(getConfig());
 
-        factionClaimProtect = new FactionClaimProtect (logger, db);
+        factionClaimProtect = new FactionClaimProtect (logger, db, config);
         Objects.requireNonNull(this.getCommand("discord")).setExecutor(new DiscordCommandManager(config));
         Objects.requireNonNull(this.getCommand("setenchant")).setExecutor(new EnchantCommandManager(config));
         Objects.requireNonNull(this.getCommand("f")).setExecutor(new FactionsCommandManager(config, db, logger));
@@ -115,7 +115,17 @@ public final class SimpleFactions extends JavaPlugin implements Listener {
             // Allow a creeper to be placed in faction claim
             allowFactionClaim = true;
             factionClaimProtect.run(event, chunkBeingModified, event.getPlayer(), allowWarzone, allowSafezone, allowFactionClaim, true);
-        } else if (block.getState() instanceof InventoryHolder) {
+        } else if (block.getState() instanceof InventoryHolder
+            || type == Material.ENDER_CHEST
+            || type == Material.CRAFTING_TABLE
+            || type == Material.ENCHANTING_TABLE
+            || type == Material.ANVIL
+            || type == Material.CHIPPED_ANVIL
+            || type == Material.DAMAGED_ANVIL
+            || type == Material.GRINDSTONE
+            || type == Material.SMITHING_TABLE
+            || type == Material.STONECUTTER
+        ) {
             // Always allow chests and similar items to be opened
             // NOTE: InventoryHolder does not include minecart chests/ hoppers and not boats either
             allowWarzone = true;
