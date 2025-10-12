@@ -86,7 +86,7 @@ public record Show (PluginConfig config, DataBaseHelper connection) implements B
             .append(Component.text(String.format("Co-Owners: %s\n", factionCoOwnersAsString), NamedTextColor.GOLD))
             .append(Component.text(String.format("Elders: %s\n", factionEldersAsString), NamedTextColor.GOLD))
             .append(Component.text(String.format("Members: %s\n", factionMembersAsString), NamedTextColor.GOLD))
-            .append(Component.text(String.format("Power / Land / Max Power: %d / %d / %d\n", claimData.totalPower, claimData.totalLand, maxPossiblePower), NamedTextColor.GOLD))
+            .append(Component.text(String.format("Land / Power / Max Power: %d / %d / %d\n", claimData.totalLand, claimData.totalPower, maxPossiblePower), NamedTextColor.GOLD))
         );
     }
 }

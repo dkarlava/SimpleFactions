@@ -11,6 +11,7 @@ import util.BaseFactionCommand;
 import util.other.BroadcastMessageToFactionMembers;
 import util.other.GetTotalLandData;
 import java.sql.SQLException;
+import java.util.Map;
 import java.util.Objects;
 
 // TODO: claim and unclaim radius get weird if there are other claims in the radius
@@ -112,11 +113,6 @@ public record Claim(PluginConfig config, DataBaseHelper connection) implements B
             return;
         }
 
-        if (factionPlayer.rank != PlayerRank.Owner && factionPlayer.rank != PlayerRank.CoOwner) {
-            sender.sendMessage(Component.text("Only owners and co-owners can execute this command.", NamedTextColor.RED));
-            return;
-        }
-
         FactionChunk factionChunk = connection.selectFactionUsingChunk(centerX, centerZ);
         if (factionChunk != null) {
             if (factionChunk.factionName.equalsIgnoreCase("safezone")) {
@@ -136,11 +132,35 @@ public record Claim(PluginConfig config, DataBaseHelper connection) implements B
                         sender.sendMessage(Component.text("Radius claim not allowed when claiming over other faction's land. Use /f claim", NamedTextColor.RED));
                         return;
                     }
-                    Claim.claimLand(connection, factionPlayer.factionId, centerX, centerZ, config.factionLandClaimCost, player, factionChunk.factionId);
+
+                    Map<String, FactionChunk> nearbyChunks = connection.selectNearbyChunks(centerX - 1, centerX + 1, centerZ - 1, centerZ + 1);
+                    if (nearbyChunks.isEmpty()) {
+                        sender.sendMessage(Component.text("Internal Error. Adjacent claim list is empty.", NamedTextColor.RED));
+                        return;
+                    }
+                    // If nearby chunks does not equal 9 that means that at least one nearby chunk is unclaimed so we can allow the overclaim.
+                    if (nearbyChunks.size() != 9) {
+                        Claim.claimLand(connection, factionPlayer.factionId, centerX, centerZ, config.factionLandClaimCost, player, factionChunk.factionId);
+                        return;
+                    }
+
+                    for (Map.Entry<String, FactionChunk> nearbyChunk : nearbyChunks.entrySet()) {
+                        if  (!nearbyChunk.getValue().factionId.equalsIgnoreCase(factionChunk.factionId)) {
+                            Claim.claimLand(connection, factionPlayer.factionId, centerX, centerZ, config.factionLandClaimCost, player, factionChunk.factionId);
+                            return;
+                        }
+                    }
+                    sender.sendMessage(Component.text(String.format("When overclaiming, there must be at least one adjacent claim that isn't owned by %s.", factionChunk.factionName), NamedTextColor.RED));
+                    return;
                 } else {
                     sender.sendMessage(Component.text(String.format("This land is already owned by %s", factionChunk.factionName), NamedTextColor.RED));
                 }
             }
+            return;
+        }
+
+        if (factionPlayer.rank != PlayerRank.Owner && factionPlayer.rank != PlayerRank.CoOwner) {
+            sender.sendMessage(Component.text("Only owners and co-owners can execute this command.", NamedTextColor.RED));
             return;
         }
 
