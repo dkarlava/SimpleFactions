@@ -18,7 +18,8 @@ public enum PossibleFactionCommands {
     Home("home"),
     Promote("promote"),
     Demote("demote"),
-    Destroy("destroy");
+    Destroy("destroy"),
+    DelHome("delhome");
     private final String command;
     PossibleFactionCommands (String command) {
         this.command = command;

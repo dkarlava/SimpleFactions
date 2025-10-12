@@ -3,6 +3,7 @@ import daveiiii.simpleFactions.data.namedQueries.faction.delete.DeleteFaction;
 import daveiiii.simpleFactions.data.namedQueries.faction.insert.InsertFaction;
 import daveiiii.simpleFactions.data.namedQueries.faction.select.*;
 import daveiiii.simpleFactions.data.namedQueries.faction.update.UpdateFactionHome;
+import daveiiii.simpleFactions.data.namedQueries.faction.update.UpdateFactionHomeUnset;
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.create.CreateFactionChunk;
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.create.CreateFactionSafeZoneWarZoneChunk;
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.delete.DeleteAllFactionLand;
@@ -233,6 +234,10 @@ public class DataBaseHelper {
 
     public void updateFactionMemberRank (UUID playerId, PlayerRank rank) throws SQLException {
         UpdateFactionMemberRank.run(connection, playerId, rank);
+    }
+
+    public void updateFactionHomeUnset (String factionId) throws SQLException {
+        UpdateFactionHomeUnset.run(connection, factionId);
     }
 
     public void close () throws SQLException {
