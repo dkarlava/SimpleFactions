@@ -42,6 +42,7 @@ public class FactionsCommandManager implements CommandExecutor {
     @Override
     public boolean onCommand (@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String label, String[] args) {
         if (args.length == 0) {
+//            test
             sender.sendMessage("Usage: /f <command>");
             return true;
         }
