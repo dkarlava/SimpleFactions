@@ -17,6 +17,8 @@ public class PluginConfig {
     public final int factionLandClaimCost;
     public final int factionDeathPowerLose;
     public final int factionPowerIncreaseAmount;
+    public final String discordLink;
+    public boolean debug;
 
     public PluginConfig(FileConfiguration config) {
         this.factionNameRegex = Pattern.compile(Objects.requireNonNullElse(config.getString("faction-name-regex"), "^[a-zA-Z0-9]+$"));
@@ -81,5 +83,7 @@ public class PluginConfig {
         } else {
             this.factionPowerIncreaseAmount = factionPowerIncreaseAmount;
         }
+        this.discordLink = config.getString("discord-link");
+        this.debug = config.getBoolean("debug");
     }
 }

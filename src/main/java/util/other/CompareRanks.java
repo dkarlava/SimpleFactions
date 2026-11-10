@@ -3,6 +3,7 @@ package util.other;
 import types.PlayerRank;
 
 public class CompareRanks {
+    // returns true if the first player is a HIGHER rank than the second
     public static boolean compareRanks(PlayerRank playerOne, PlayerRank playerTwo){
         if (playerOne.equals(PlayerRank.Owner)) {
             return !playerTwo.equals(PlayerRank.Owner);

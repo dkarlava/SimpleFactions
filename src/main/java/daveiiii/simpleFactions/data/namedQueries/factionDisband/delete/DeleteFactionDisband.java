@@ -26,8 +26,8 @@ public class DeleteFactionDisband extends BaseQuery {
             }
 
             // Deleting all members of the faction
-            String getFactionQuery = "DELETE FROM faction_member WHERE faction_id = ? RETURNING id";
-            try (PreparedStatement stmt = connection.prepareStatement(getFactionQuery)) {
+            String deleteFactionMemberQuery = "DELETE FROM faction_member WHERE faction_id = ? RETURNING id";
+            try (PreparedStatement stmt = connection.prepareStatement(deleteFactionMemberQuery)) {
                 stmt.setString(1, factionId);
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (!rs.next()) {
@@ -40,6 +40,28 @@ public class DeleteFactionDisband extends BaseQuery {
             String deleteFactionDisbandQuery = "DELETE FROM faction_disband WHERE id = ? RETURNING id";
             try (PreparedStatement stmt = connection.prepareStatement(deleteFactionDisbandQuery)) {
                 stmt.setString(1, factionDisbandId);
+                stmt.executeQuery();
+            }
+
+            // Deleting faction land
+            String deleteFactionLandQuery = """
+                DELETE FROM faction_chunk
+                WHERE faction_id = ?
+                RETURNING id;
+            """;
+            try (PreparedStatement stmt = connection.prepareStatement(deleteFactionLandQuery)) {
+                stmt.setString(1, factionId);
+                stmt.executeQuery();
+            }
+
+            // Deleting faction invites
+            String deleteFactionInvitesQuery = """
+                DELETE FROM faction_invite
+                WHERE faction_id = ?
+                RETURNING id;
+            """;
+            try (PreparedStatement stmt = connection.prepareStatement(deleteFactionInvitesQuery)) {
+                stmt.setString(1, factionId);
                 stmt.executeQuery();
             }
 

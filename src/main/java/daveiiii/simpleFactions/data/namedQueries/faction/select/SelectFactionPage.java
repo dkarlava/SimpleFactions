@@ -1,32 +1,32 @@
 package daveiiii.simpleFactions.data.namedQueries.faction.select;
 
-import daveiiii.simpleFactions.data.namedQueries.BaseQuery;
 import types.Faction;
-
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SelectFactionPage extends BaseQuery {
+public class SelectFactionPage {
     public static List<Faction> run (Connection connection, int pageNumber) throws SQLException {
-        String[] queryItems = {
-            "SELECT name, id",
-            "FROM faction",
-            "LIMIT 10",
-            String.format("OFFSET %d", (pageNumber - 1) * 10),
-        };
-        String query = BaseQuery.createQuery(queryItems);
-        try (Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery(query)) {
-            List<Faction> ret = new ArrayList<>();
-            while (rs.next()) {
-                String name = rs.getString("name");
-                String id = rs.getString("id");
-                ret.add(new Faction(name, id));
+        // todo: order by created date or value
+        String query = """
+            SELECT name, id
+            FROM faction
+            WHERE name_unique != 'warzone' AND name_unique != 'safezone'
+            ORDER BY name_unique ASC
+            LIMIT 10
+            OFFSET ?
+        """;
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setInt(1, (pageNumber - 1) * 10);
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<Faction> ret = new ArrayList<>();
+                while (rs.next()) {
+                    String name = rs.getString("name");
+                    String id = rs.getString("id");
+                    ret.add(new Faction(name, id));
+                }
+                return ret;
             }
-            return ret;
         }
     }
 }

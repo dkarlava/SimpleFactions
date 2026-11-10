@@ -13,16 +13,15 @@ import java.util.UUID;
 public record Leave (PluginConfig config, DataBaseHelper connection) implements BaseFactionCommand {
     @Override
     public void execute(CommandSender sender, String[] args) throws SQLException {
-        if (!(sender instanceof Player)) {
+        if (!(sender instanceof Player player)) {
             sender.sendMessage(Component.text("Only players can execute this command!"));
+            return;
         }
         if (args.length != 0) {
             sender.sendMessage("Usage: /f leave");
             return;
         }
 
-        assert sender instanceof Player;
-        Player player = (Player) sender;
         UUID playerId = player.getUniqueId();
 
         if (connection.selectFactionByPlayerId(playerId) == null) {

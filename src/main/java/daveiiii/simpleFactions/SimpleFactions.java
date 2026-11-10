@@ -1,31 +1,30 @@
 package daveiiii.simpleFactions;
 
+import daveiiii.simpleFactions.commands.DiscordCommandManager;
+import daveiiii.simpleFactions.commands.EnchantCommandManager;
 import daveiiii.simpleFactions.commands.FactionsCommandManager;
 import daveiiii.simpleFactions.data.DataBaseHelper;
+import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Bukkit;
-import org.bukkit.Chunk;
-import org.bukkit.Material;
-import org.bukkit.Tag;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
 import org.bukkit.event.entity.*;
+import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
-import org.bukkit.event.player.PlayerBucketEmptyEvent;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
-import types.FactionChunk;
-import types.PluginConfig;
+import types.*;
 import util.factionCommands.FactionCommandTabCompleter;
+import util.factionCommands.MapCommand;
 import util.other.FactionClaimProtect;
 import java.sql.SQLException;
 import java.util.Iterator;
@@ -34,6 +33,9 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+
+// TODO: Owner can leave faction with /f leave. needs to either disband or give owner to someone else
+// TODO: need to be able to unset f home
 
 public final class SimpleFactions extends JavaPlugin implements Listener {
 
@@ -50,16 +52,18 @@ public final class SimpleFactions extends JavaPlugin implements Listener {
         } catch (Exception e) {
             logger.severe(e.toString());
         }
-        config = new PluginConfig(getConfig());
 
         this.saveDefaultConfig();
-        logger.info("SimpleFactions has been enabled! AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
-        factionClaimProtect = new FactionClaimProtect (logger, db);
+        config = new PluginConfig(getConfig());
+
+        factionClaimProtect = new FactionClaimProtect (logger, db, config);
+        Objects.requireNonNull(this.getCommand("discord")).setExecutor(new DiscordCommandManager(config));
+        Objects.requireNonNull(this.getCommand("setenchant")).setExecutor(new EnchantCommandManager(config));
         Objects.requireNonNull(this.getCommand("f")).setExecutor(new FactionsCommandManager(config, db, logger));
         Objects.requireNonNull(this.getCommand("f")).setTabCompleter(new FactionCommandTabCompleter());
         getServer().getPluginManager().registerEvents(this, this);
         initializeRepeatingTasks();
-
+        logger.info("SimpleFactions has been enabled!");
     }
 
     @Override
@@ -72,13 +76,12 @@ public final class SimpleFactions extends JavaPlugin implements Listener {
     }
 
     @EventHandler
-    public void onPlayerJoin (PlayerJoinEvent event) {
-        try {
-            if (db.selectPlayerData(event.getPlayer().getUniqueId()) == null) {
-                db.insertPlayerData(event.getPlayer().getUniqueId());
-            }
-        } catch (SQLException e) {
-            logger.severe(e.toString());
+    public void onPlayerJoin (PlayerJoinEvent event) throws SQLException {
+        Player player = event.getPlayer();
+        UUID uuid = player.getUniqueId();
+        db.updatePlayerDataAutoMap(uuid, false);
+        if (db.selectPlayerData(uuid) == null) {
+            db.insertPlayerData(uuid);
         }
     }
 
@@ -112,7 +115,17 @@ public final class SimpleFactions extends JavaPlugin implements Listener {
             // Allow a creeper to be placed in faction claim
             allowFactionClaim = true;
             factionClaimProtect.run(event, chunkBeingModified, event.getPlayer(), allowWarzone, allowSafezone, allowFactionClaim, true);
-        } else if (block.getState() instanceof InventoryHolder) {
+        } else if (block.getState() instanceof InventoryHolder
+            || type == Material.ENDER_CHEST
+            || type == Material.CRAFTING_TABLE
+            || type == Material.ENCHANTING_TABLE
+            || type == Material.ANVIL
+            || type == Material.CHIPPED_ANVIL
+            || type == Material.DAMAGED_ANVIL
+            || type == Material.GRINDSTONE
+            || type == Material.SMITHING_TABLE
+            || type == Material.STONECUTTER
+        ) {
             // Always allow chests and similar items to be opened
             // NOTE: InventoryHolder does not include minecart chests/ hoppers and not boats either
             allowWarzone = true;
@@ -154,9 +167,14 @@ public final class SimpleFactions extends JavaPlugin implements Listener {
             return;
         }
 
+        boolean allowWarzone = true;
+        if (event.getCause() == EntityDamageEvent.DamageCause.FALL) {
+            allowWarzone = false;
+        }
+
         Chunk chunkBeingModified = player.getChunk();
 
-        factionClaimProtect.run(event, chunkBeingModified, player, true, false, true, true);
+        factionClaimProtect.run(event, chunkBeingModified, player, allowWarzone, false, true, true);
     }
 
     @EventHandler
@@ -226,11 +244,18 @@ public final class SimpleFactions extends JavaPlugin implements Listener {
     public void onEntityDamageByEntityEvent (EntityDamageByEntityEvent event) throws SQLException {
         Chunk chunkBeingModified = event.getEntity().getChunk();
         Player player = null;
+        boolean allowWarzone = true;
+        boolean allowSafezone = false;
         if (event.getEntity() instanceof LivingEntity && !(event.getEntity() instanceof Player)) {
             return;
         }
+        if (event.getDamager() instanceof Player maybePlayer) {
+            if (maybePlayer.isOp()) {
+                allowSafezone = true;
+            }
+        }
 
-        factionClaimProtect.run(event, chunkBeingModified, player, true, false, true, false);
+        factionClaimProtect.run(event, chunkBeingModified, player, allowWarzone, allowSafezone, true, false);
     }
 
     @EventHandler
@@ -268,9 +293,30 @@ public final class SimpleFactions extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onHangingBreakEvent (HangingBreakEvent event) throws SQLException {
+        // handled elsewhere
+        if (event instanceof HangingBreakByEntityEvent) {
+            return;
+        }
         Chunk chunkBeingModified = event.getEntity().getChunk();
         Player player = null;
         factionClaimProtect.run(event, chunkBeingModified, player, false, false, true, false);
+    }
+
+    @EventHandler
+    public void onHangingBreakByEntity(HangingBreakByEntityEvent event) throws SQLException {
+        Entity remover = event.getRemover();
+        Chunk chunkBeingModified = event.getEntity().getChunk();
+        boolean allowWarzone = false;
+        boolean allowSafezone = false;
+        Player player = null;
+        if (remover instanceof Player) {
+            player = (Player) remover;
+            if (player.isOp()) {
+                allowWarzone = true;
+                allowSafezone = true;
+            }
+        }
+        factionClaimProtect.run(event, chunkBeingModified, player, allowWarzone, allowSafezone, true, false);
     }
 
     @EventHandler
@@ -325,6 +371,76 @@ public final class SimpleFactions extends JavaPlugin implements Listener {
         }
         db.updatePlayerPower(playerId, currentPower);
         player.sendMessage(Component.text(String.format("Your new power is %d/%d", currentPower, config.factionMaxPowerPerPlayer), NamedTextColor.RED));
+    }
+    @EventHandler
+    public void onPlayerMove(PlayerMoveEvent event) throws SQLException {
+        Player player = event.getPlayer();
+
+        Chunk fromChunk = event.getFrom().getChunk();
+        Chunk toChunk = event.getTo().getChunk();
+
+        if (!fromChunk.equals(toChunk) && db.selectPlayerDataAutoMap(player.getUniqueId())) {
+            MapCommand.displayMap(db, player, toChunk);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onRespawn(PlayerRespawnEvent event) throws SQLException {
+        Player player = event.getPlayer();
+        UUID playerId = player.getUniqueId();
+        FactionPlayer factionPlayer = db.selectFactionPlayerMember(playerId);
+        if (factionPlayer == null || factionPlayer.rank == PlayerRank.Member) {
+            return;
+        }
+        FactionHome factionHome = db.selectFactionHome(factionPlayer.factionId);
+        if (factionHome == null || (factionHome.x == 0 && factionHome.z == 0)) {
+            return;
+        }
+        Location loc = new Location(
+            Bukkit.getWorld("world"),
+            factionHome.x,
+            factionHome.y,
+            factionHome.z,
+            factionHome.yaw,
+            factionHome.pitch
+        );
+        event.setRespawnLocation(loc);
+    }
+
+    @EventHandler
+    public void onPlayerChat(AsyncChatEvent event) throws SQLException {
+        Player player = event.getPlayer();
+        FactionPlayer factionPlayer = db.selectFactionPlayerMember(player.getUniqueId());
+        String displayName;
+
+        if (factionPlayer != null) {
+            String prefix = switch (factionPlayer.rank) {
+                case Owner -> "***";
+                case CoOwner -> "**";
+                case Elder -> "*";
+                default -> "";
+            };
+
+            displayName = String.format("[%s%s] %s", prefix, factionPlayer.factionName, player.getName());
+        } else {
+            displayName = player.getName();
+        }
+
+        event.renderer((source, sourceDisplayName, message, viewer) -> {
+            if (viewer instanceof Player playerViewer) {
+                try {
+                    FactionPlayer viewerFaction = db.selectFactionPlayerMember(playerViewer.getUniqueId());
+                    if (viewerFaction != null && factionPlayer != null) {
+                        if (viewerFaction.factionId.equals(factionPlayer.factionId)) {
+                            return Component.text(String.format("%s: ", displayName)).append(message).color(NamedTextColor.GREEN);
+                        }
+                    }
+                } catch (SQLException e) {
+                    // no-op
+                }
+            }
+            return Component.text(String.format("%s: ", displayName)).append(message);
+        });
     }
 
     private void initializeRepeatingTasks () {

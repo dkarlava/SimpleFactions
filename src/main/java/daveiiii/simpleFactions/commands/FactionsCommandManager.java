@@ -11,7 +11,6 @@ import types.PluginConfig;
 import util.BaseFactionCommand;
 import types.PossibleFactionCommands;
 import util.factionCommands.*;
-
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -37,6 +36,13 @@ public class FactionsCommandManager implements CommandExecutor {
         commandMap.put(PossibleFactionCommands.Map, new MapCommand(config, connection));
         commandMap.put(PossibleFactionCommands.Claim, new Claim(config, connection));
         commandMap.put(PossibleFactionCommands.Unclaim, new Unclaim(config, connection));
+        commandMap.put(PossibleFactionCommands.SetPower, new SetPower(config, connection));
+        commandMap.put(PossibleFactionCommands.SetHome, new SetHome(config, connection));
+        commandMap.put(PossibleFactionCommands.Home, new Home(config, connection));
+        commandMap.put(PossibleFactionCommands.Promote, new Promote(config, connection));
+        commandMap.put(PossibleFactionCommands.Demote, new Demote(config, connection));
+        commandMap.put(PossibleFactionCommands.Destroy, new Destroy(config, connection));
+        commandMap.put(PossibleFactionCommands.DelHome, new DelHome(config, connection));
     }
 
     @Override

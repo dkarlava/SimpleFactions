@@ -22,12 +22,30 @@ public record MapCommand(PluginConfig config, DataBaseHelper connection) impleme
             sender.sendMessage(Component.text("Only players can execute this command!"));
             return;
         }
-        // TODO: support /f map on.... erg
-        if (args.length != 0) {
-            sender.sendMessage("Usage: /f map");
+        if (args.length > 1) {
+            sender.sendMessage(Component.text("Usage: /f map", NamedTextColor.RED));
             return;
         }
+
+        if (args.length == 1) {
+            String onOff = args[0];
+            if (onOff.equalsIgnoreCase("on")) {
+                connection.updatePlayerDataAutoMap(player.getUniqueId(), true);
+            } else if (onOff.equalsIgnoreCase("off")) {
+                connection.updatePlayerDataAutoMap(player.getUniqueId(), false);
+            } else {
+                player.sendMessage(Component.text("Usage: /f map", NamedTextColor.RED));
+            }
+        }
+        MapCommand.displayMap(connection, player, null);
+    }
+
+    // Passing in chunk instead of just getting it from the player to help with the auto map
+    public static void displayMap (DataBaseHelper connection, Player player, Chunk overrideChunk) throws SQLException {
         Chunk chunk = player.getChunk();
+        if (overrideChunk != null) {
+            chunk = overrideChunk;
+        }
         int chunkX = chunk.getX();
         int chunkZ = chunk.getZ();
         int minX = chunkX - 12;
@@ -38,13 +56,12 @@ public record MapCommand(PluginConfig config, DataBaseHelper connection) impleme
         // This is slightly complex logic to generate random symbols for claimed lands on f map
         // If this functionality requires too much compute we can just statically reference the symbols, but that seemed like less fun
         Random random = new Random();
-        String symbols = "!@#$%^&*()_+=[]{}|;:'\",.<>/?`~";
+        String symbols = "ABCDEGHJKLMNOPQRSTUVWXYZ#$%&/\\";
         StringBuilder pool = new StringBuilder(symbols);
         Map<String, FactionChunk> nearbyFactionChunks = connection.selectNearbyChunks(minX, maxX, minZ, maxZ);
         Map<String, Character> factionSymbols = new HashMap<>();
 
         // TODO: allow for the max rows and columns to be configurable?
-        // TODO: based on the symbol the row width is difference sizes, anyway to fix?
         StringBuilder fMap = new StringBuilder();
         for (int z = minZ; z < maxZ; z++) {
             for (int x = minX; x < maxX; x++) {
@@ -84,13 +101,13 @@ public record MapCommand(PluginConfig config, DataBaseHelper connection) impleme
         }
 
         String factionSymbolKey = factionSymbols.entrySet().stream()
-            .map(entry -> String.format("%c: %s", entry.getValue(), entry.getKey()))
-            .collect(Collectors.joining(", "));
+                .map(entry -> String.format("%c: %s", entry.getValue(), entry.getKey()))
+                .collect(Collectors.joining(", "));
 
         // TODO: format this make it centered if possible, add some nice headers, add compass, make it not gold, make your own claims green
         player.sendMessage(Component.text(String.format("==========(%d, %d)==========\n", chunk.getX(), chunk.getZ()), NamedTextColor.GOLD)
-            .append(Component.text(String.format("%s\n", fMap), NamedTextColor.GOLD))
-            .append(Component.text(String.format("%s\n", factionSymbolKey), NamedTextColor.GOLD))
+                .append(Component.text(String.format("%s\n", fMap), NamedTextColor.GOLD))
+                .append(Component.text(String.format("%s\n", factionSymbolKey), NamedTextColor.GOLD))
         );
     }
 }

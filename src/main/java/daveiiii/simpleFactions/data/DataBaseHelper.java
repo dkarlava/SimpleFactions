@@ -1,13 +1,18 @@
 package daveiiii.simpleFactions.data;
+import daveiiii.simpleFactions.data.namedQueries.faction.delete.DeleteFaction;
 import daveiiii.simpleFactions.data.namedQueries.faction.insert.InsertFaction;
-import daveiiii.simpleFactions.data.namedQueries.faction.select.SelectFactionByName;
-import daveiiii.simpleFactions.data.namedQueries.faction.select.SelectFactionByPlayerId;
+import daveiiii.simpleFactions.data.namedQueries.faction.select.*;
+import daveiiii.simpleFactions.data.namedQueries.faction.update.UpdateFactionHome;
+import daveiiii.simpleFactions.data.namedQueries.faction.update.UpdateFactionHomeUnset;
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.create.CreateFactionChunk;
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.create.CreateFactionSafeZoneWarZoneChunk;
+import daveiiii.simpleFactions.data.namedQueries.factionChunk.delete.DeleteAllFactionLand;
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.delete.DeleteFactionChunk;
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.select.SelectAllFactionClaims;
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.select.SelectFactionUsingChunk;
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.select.SelectNearbyChunks;
+import daveiiii.simpleFactions.data.namedQueries.factionChunk.update.UpdateFactionChunk;
+import daveiiii.simpleFactions.data.namedQueries.factionChunk.update.UpdateFactionSafeZoneWarZoneChunk;
 import daveiiii.simpleFactions.data.namedQueries.factionDisband.delete.DeleteFactionDisband;
 import daveiiii.simpleFactions.data.namedQueries.factionDisband.insert.InsertFactionDisband;
 import daveiiii.simpleFactions.data.namedQueries.factionDisband.select.SelectFactionDisbandedPrimed;
@@ -18,13 +23,14 @@ import daveiiii.simpleFactions.data.namedQueries.factionInvite.select.SelectFact
 import daveiiii.simpleFactions.data.namedQueries.factionInvite.update.UpdatePlayerInviteTimestamp;
 import daveiiii.simpleFactions.data.namedQueries.factionMember.insert.InsertFactionMember;
 import daveiiii.simpleFactions.data.namedQueries.factionMember.select.SelectAllFactionMembersUsingFactionId;
+import daveiiii.simpleFactions.data.namedQueries.factionMember.update.UpdateFactionMemberRank;
 import daveiiii.simpleFactions.data.namedQueries.playerData.insert.InsertPlayerData;
 import daveiiii.simpleFactions.data.namedQueries.playerData.select.SelectPlayerData;
+import daveiiii.simpleFactions.data.namedQueries.playerData.select.SelectPlayerDataAutoMap;
 import daveiiii.simpleFactions.data.namedQueries.playerData.update.UpdateIncreasePowerForAllOnlinePlayers;
+import daveiiii.simpleFactions.data.namedQueries.playerData.update.UpdatePlayerDataAutoMap;
 import daveiiii.simpleFactions.data.namedQueries.playerData.update.UpdatePlayerPower;
 import daveiiii.simpleFactions.data.namedQueries.tables.*;
-import daveiiii.simpleFactions.data.namedQueries.faction.select.SelectTotalFactionPageNumber;
-import daveiiii.simpleFactions.data.namedQueries.faction.select.SelectFactionPage;
 import daveiiii.simpleFactions.data.namedQueries.factionMember.delete.DeleteFactionMember;
 import daveiiii.simpleFactions.data.namedQueries.factionMember.select.SelectFactionMember;
 import types.*;
@@ -69,6 +75,8 @@ public class DataBaseHelper {
         logger.info("CreatePlayerData created");
         CreateFactionChunkTable.run(connection);
         logger.info("CreateFactionChunkTable created");
+        AlterCreatePlayerData.run(connection);
+        logger.info("AlterCreatePlayerData altered");
         logger.info("========== DATABASE INITIALIZED ==========");
     }
 
@@ -132,6 +140,10 @@ public class DataBaseHelper {
         return DeleteFactionDisband.run(connection, factionDisbandId);
     }
 
+    public String deleteFaction (String factionId) throws SQLException {
+        return DeleteFaction.run(connection, factionId);
+    }
+
     public List<Faction> selectFactionPage (int pageNumber) throws SQLException {
         return SelectFactionPage.run(connection, pageNumber);
     }
@@ -156,11 +168,11 @@ public class DataBaseHelper {
         CreateFactionChunk.run(connection, factionId, x, z);
     }
 
-    public void createFactionSafeZoneChunk (int x, int z) throws SQLException {
+    public void createFactionSafezoneChunk (int x, int z) throws SQLException {
         CreateFactionSafeZoneWarZoneChunk.run(connection, "safezone", x, z);
     }
 
-    public void createFactionWarZoneChunk (int x, int z) throws SQLException {
+    public void createFactionWarzoneChunk (int x, int z) throws SQLException {
         CreateFactionSafeZoneWarZoneChunk.run(connection, "warzone", x, z);
     }
 
@@ -182,6 +194,50 @@ public class DataBaseHelper {
 
     public List<FactionChunk> selectAllFactionClaims (String factionId) throws SQLException {
         return SelectAllFactionClaims.run(connection, factionId);
+    }
+
+    public void updatePlayerDataAutoMap (UUID playerId, boolean autoMap) throws SQLException {
+        UpdatePlayerDataAutoMap.run(connection, playerId, autoMap);
+    }
+
+    public boolean selectPlayerDataAutoMap (UUID playerId) throws SQLException {
+        return SelectPlayerDataAutoMap.run(connection, playerId);
+    }
+
+    public void updateFactionChunk (String factionId, int x, int z) throws SQLException {
+        UpdateFactionChunk.run(connection, factionId, x, z);
+    }
+
+    public Faction selectFaction (String factionId) throws SQLException {
+        return SelectFaction.run(connection, factionId);
+    }
+
+    public void updateFactionSafezoneChunk (int x, int z) throws SQLException {
+        UpdateFactionSafeZoneWarZoneChunk.run(connection, "safezone", x, z);
+    }
+
+    public void updateFactionWarzoneChunk (int x, int z) throws SQLException {
+        UpdateFactionSafeZoneWarZoneChunk.run(connection, "warzone", x, z);
+    }
+
+    public void deleteAllFactionLand (String factionId) throws SQLException {
+        DeleteAllFactionLand.run(connection, factionId);
+    }
+
+    public void updateFactionHome (String factionId, double x, double y, double z, float yaw, float pitch) throws SQLException {
+        UpdateFactionHome.run(connection, factionId, x, y, z, yaw, pitch);
+    }
+
+    public FactionHome selectFactionHome (String factionId) throws SQLException {
+        return SelectFactionHome.run(connection, factionId);
+    }
+
+    public void updateFactionMemberRank (UUID playerId, PlayerRank rank) throws SQLException {
+        UpdateFactionMemberRank.run(connection, playerId, rank);
+    }
+
+    public void updateFactionHomeUnset (String factionId) throws SQLException {
+        UpdateFactionHomeUnset.run(connection, factionId);
     }
 
     public void close () throws SQLException {

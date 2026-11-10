@@ -8,9 +8,10 @@ import java.util.UUID;
 public class SelectFactionMember {
     public static FactionPlayer run (Connection connection, UUID playerId) throws SQLException {
         String query = """
-            SELECT fm.rank, fm.faction_id, pd.power
+            SELECT fm.rank, fm.faction_id, pd.power, f.name
             FROM faction_member fm
             JOIN player_data pd ON fm.player_id = pd.player_id
+            JOIN faction f ON fm.faction_id = f.id
             WHERE fm.player_id = ?
         """;
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
@@ -19,7 +20,13 @@ public class SelectFactionMember {
                 if (!rs.next()) {
                     return null;
                 }
-                return new FactionPlayer(PlayerRank.getValue(rs.getString("rank")), rs.getString("faction_id"), playerId, rs.getInt("power"));
+                return new FactionPlayer(
+                    PlayerRank.getValue(rs.getString("rank")),
+                    rs.getString("faction_id"),
+                    playerId,
+                    rs.getInt("power"),
+                    rs.getString("name")
+                );
             }
         }
     }
