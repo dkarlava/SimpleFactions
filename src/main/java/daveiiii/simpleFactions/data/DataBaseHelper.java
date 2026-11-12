@@ -22,6 +22,7 @@ import daveiiii.simpleFactions.data.namedQueries.factionInvite.insert.InsertPlay
 import daveiiii.simpleFactions.data.namedQueries.factionInvite.select.SelectFactionInvitePrimed;
 import daveiiii.simpleFactions.data.namedQueries.factionInvite.update.UpdatePlayerInviteTimestamp;
 import daveiiii.simpleFactions.data.namedQueries.factionMember.insert.InsertFactionMember;
+import daveiiii.simpleFactions.data.namedQueries.factionMember.select.SelectAllFactionMemberIdsUsingPlayerId;
 import daveiiii.simpleFactions.data.namedQueries.factionMember.select.SelectAllFactionMembersUsingFactionId;
 import daveiiii.simpleFactions.data.namedQueries.factionMember.update.UpdateFactionMemberRank;
 import daveiiii.simpleFactions.data.namedQueries.playerData.insert.InsertPlayerData;
@@ -162,6 +163,10 @@ public class DataBaseHelper {
 
     public List<FactionPlayer> selectAllFactionMembersUsingFactionId (String factionId) throws SQLException {
         return SelectAllFactionMembersUsingFactionId.run(connection, factionId);
+    }
+
+    public List<UUID> selectAllFactionMemberIdsUsingPlayerId (UUID playerId) throws SQLException {
+        return SelectAllFactionMemberIdsUsingPlayerId.run(connection, playerId);
     }
 
     public void createFactionChunk (String factionId, int x, int z) throws SQLException {
