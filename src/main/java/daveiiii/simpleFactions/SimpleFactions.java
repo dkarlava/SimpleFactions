@@ -386,7 +386,7 @@ public final class SimpleFactions extends JavaPlugin implements Listener {
         Chunk toChunk = event.getTo().getChunk();
 
         if (!fromChunk.equals(toChunk) && db.selectPlayerDataAutoMap(player.getUniqueId())) {
-            MapCommand.displayMap(db, player, toChunk);
+            MapCommand.displayMap(db, player, toChunk, logger);
         }
     }
 

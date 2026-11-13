@@ -2,20 +2,26 @@ package util.factionCommands;
 
 import daveiiii.simpleFactions.data.DataBaseHelper;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Chunk;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import types.Faction;
 import types.FactionChunk;
 import types.PluginConfig;
 import util.BaseFactionCommand;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-public record MapCommand(PluginConfig config, DataBaseHelper connection) implements BaseFactionCommand {
+public record MapCommand(PluginConfig config, DataBaseHelper connection, Logger logger) implements BaseFactionCommand {
+    private static final String symbols = "=#$%&/\\^*~?<>@";
+
     @Override
     public void execute(CommandSender sender, String[] args) throws SQLException {
         if (!(sender instanceof Player player)) {
@@ -37,77 +43,82 @@ public record MapCommand(PluginConfig config, DataBaseHelper connection) impleme
                 player.sendMessage(Component.text("Usage: /f map", NamedTextColor.RED));
             }
         }
-        MapCommand.displayMap(connection, player, null);
+        MapCommand.displayMap(connection, player, null, logger);
     }
 
     // Passing in chunk instead of just getting it from the player to help with the auto map
-    public static void displayMap (DataBaseHelper connection, Player player, Chunk overrideChunk) throws SQLException {
+    public static void displayMap (DataBaseHelper connection, Player player, Chunk overrideChunk, Logger logger) throws SQLException {
         Chunk chunk = player.getChunk();
         if (overrideChunk != null) {
             chunk = overrideChunk;
         }
+
+        Faction playerFaction = connection.selectFactionByPlayerId(player.getUniqueId());
+
         int chunkX = chunk.getX();
         int chunkZ = chunk.getZ();
-        int minX = chunkX - 12;
-        int maxX = chunkX + 12;
-        int minZ = chunkZ - 5;
-        int maxZ = chunkZ + 5;
+        int minX = chunkX - 23;
+        int maxX = chunkX + 23;
+        int minZ = chunkZ - 8;
+        int maxZ = chunkZ + 7;
 
-        // This is slightly complex logic to generate random symbols for claimed lands on f map
-        // If this functionality requires too much compute we can just statically reference the symbols, but that seemed like less fun
-        Random random = new Random();
-        String symbols = "ABCDEGHJKLMNOPQRSTUVWXYZ#$%&/\\";
-        StringBuilder pool = new StringBuilder(symbols);
+        FactionChunk currentChunk = connection.selectFactionUsingChunk(chunkX, chunkZ);
         Map<String, FactionChunk> nearbyFactionChunks = connection.selectNearbyChunks(minX, maxX, minZ, maxZ);
         Map<String, Character> factionSymbols = new HashMap<>();
 
-        // TODO: allow for the max rows and columns to be configurable?
-        StringBuilder fMap = new StringBuilder();
+        Component fMap = Component.text("[___________] ", NamedTextColor.GOLD)
+            .append(Component.text(String.format("(%d, %d) ", chunk.getX(), chunk.getZ()), NamedTextColor.GREEN))
+            .append(Component.text(currentChunk == null ? "Unclaimed" : currentChunk.factionName, NamedTextColor.GOLD))
+            .append(Component.text(" [___________]", NamedTextColor.GOLD))
+            .append(Component.text('\n'));
+        int claimSymbolIndex = 0;
         for (int z = minZ; z < maxZ; z++) {
             for (int x = minX; x < maxX; x++) {
                 String keyLookup = String.format("(%d,%d)", z, x);
                 FactionChunk factionChunk = nearbyFactionChunks.get(keyLookup);
-                if (factionChunk == null) {
-                    if (x == chunkX && z == chunkZ) {
-                        fMap.append("+");
-                    } else {
-                        fMap.append("-");
-                    }
+                if (x == chunkX && z == chunkZ) {
+                    fMap = fMap.append(Component.text('+', NamedTextColor.AQUA));
+                } else if (factionChunk == null) {
+                    fMap = fMap.append(Component.text('-', NamedTextColor.GRAY));
                 } else {
                     Character factionSymbol = factionSymbols.get(factionChunk.factionName);
                     if (factionSymbol == null) {
-                        if (pool.isEmpty()) {
-                            pool = new StringBuilder(symbols);
-                        }
-                        int index = random.nextInt(pool.length());
-                        Character symbol = pool.charAt(index);
-                        if (x == chunkX && z == chunkZ) {
-                            fMap.append("+");
+                        if (Objects.equals(factionChunk.factionName, "SafeZone")) {
+                            fMap = fMap.append(Component.text('+', NamedTextColor.GOLD));
+                        } else if (Objects.equals(factionChunk.factionName, "WarZone")) {
+                            fMap = fMap.append(Component.text('+', NamedTextColor.DARK_RED));
                         } else {
-                            fMap.append(symbol);
+                            // if there are more different faction claims than we have characters for we restart the symbol iteration
+                            // I am not really sure how to accommodate this
+                            if (claimSymbolIndex == symbols.length()) {
+                                claimSymbolIndex = 0;
+                            }
+                            char symbol = symbols.charAt(claimSymbolIndex);
+                            if (playerFaction.name.equals(factionChunk.factionName)) {
+                                fMap = fMap.append(Component.text(symbol, NamedTextColor.GREEN));
+                            } else {
+                                fMap = fMap.append(Component.text(symbol, NamedTextColor.WHITE));
+                            }
+                            factionSymbols.put(factionChunk.factionName, symbol);
+                            claimSymbolIndex += 1;
                         }
-                        factionSymbols.put(factionChunk.factionName, symbol);
-                        pool.deleteCharAt(index);
                     } else {
-                        if (x == chunkX && z == chunkZ) {
-                            fMap.append("+");
+                        if (playerFaction.name.equals(factionChunk.factionName)) {
+                            fMap = fMap.append(Component.text(factionSymbol, NamedTextColor.GREEN));
                         } else {
-                            fMap.append(factionSymbol);
+                            fMap = fMap.append(Component.text(factionSymbol, NamedTextColor.WHITE));
                         }
                     }
                 }
             }
-            fMap.append("\n");
+            fMap = fMap.append(Component.text('\n'));
         }
 
         String factionSymbolKey = factionSymbols.entrySet().stream()
                 .map(entry -> String.format("%c: %s", entry.getValue(), entry.getKey()))
                 .collect(Collectors.joining(", "));
 
-        // TODO: format this make it centered if possible, add some nice headers, add compass, make it not gold, make your own claims green
-        player.sendMessage(Component.text(String.format("==========(%d, %d)==========\n", chunk.getX(), chunk.getZ()), NamedTextColor.GOLD)
-                .append(Component.text(String.format("%s\n", fMap), NamedTextColor.GOLD))
-                .append(Component.text(String.format("%s\n", factionSymbolKey), NamedTextColor.GOLD))
-        );
+        fMap = fMap.append(Component.text(factionSymbolKey, NamedTextColor.WHITE));
+        player.sendMessage(fMap);
     }
 }
