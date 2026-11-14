@@ -23,7 +23,7 @@ public record Disband (PluginConfig config, DataBaseHelper connection) implement
             return;
         }
         if (args.length != 0) {
-            sender.sendMessage("Usage: /f create <factionName>");
+            sender.sendMessage("Usage: /f disband");
             return;
         }
 

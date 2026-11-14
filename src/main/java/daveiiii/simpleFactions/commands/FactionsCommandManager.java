@@ -35,7 +35,7 @@ public class FactionsCommandManager implements CommandExecutor {
         commandMap.put(PossibleFactionCommands.Power, new Power(config, connection));
         commandMap.put(PossibleFactionCommands.Map, new MapCommand(config, connection, logger));
         commandMap.put(PossibleFactionCommands.Claim, new Claim(config, connection));
-        commandMap.put(PossibleFactionCommands.Unclaim, new Unclaim(config, connection));
+        commandMap.put(PossibleFactionCommands.Unclaim, new Unclaim(config, connection, logger));
         commandMap.put(PossibleFactionCommands.SetPower, new SetPower(config, connection));
         commandMap.put(PossibleFactionCommands.SetHome, new SetHome(config, connection));
         commandMap.put(PossibleFactionCommands.Home, new Home(config, connection));
@@ -43,6 +43,7 @@ public class FactionsCommandManager implements CommandExecutor {
         commandMap.put(PossibleFactionCommands.Demote, new Demote(config, connection));
         commandMap.put(PossibleFactionCommands.Destroy, new Destroy(config, connection));
         commandMap.put(PossibleFactionCommands.DelHome, new DelHome(config, connection));
+        commandMap.put(PossibleFactionCommands.TransferOwnership, new TransferOwnership(config, connection));
     }
 
     @Override

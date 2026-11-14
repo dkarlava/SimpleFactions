@@ -4,6 +4,7 @@ import daveiiii.simpleFactions.data.DataBaseHelper;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import types.FactionPlayer;
@@ -34,13 +35,14 @@ public record Promote(PluginConfig config, DataBaseHelper connection) implements
             return;
         }
 
-        Player otherPlayer = Bukkit.getPlayer(args[0]);
-        if (otherPlayer == null) {
-            sender.sendMessage(Component.text("That player is either not online or doesnt exist.", NamedTextColor.RED));
+        String otherPlayerName = args[0];
+        OfflinePlayer maybeOtherPlayer = Bukkit.getOfflinePlayer(otherPlayerName.toLowerCase());
+        if (!maybeOtherPlayer.hasPlayedBefore()) {
+            // TODO: Error?
             return;
         }
-
-        FactionPlayer otherFactionPlayer = connection.selectFactionPlayerMember(otherPlayer.getUniqueId());
+        UUID otherPlayerId = maybeOtherPlayer.getUniqueId();
+        FactionPlayer otherFactionPlayer = connection.selectFactionPlayerMember(otherPlayerId);
         if (otherFactionPlayer == null || !otherFactionPlayer.factionId.equals(factionPlayer.factionId)) {
             sender.sendMessage(Component.text("That player is not in your faction.", NamedTextColor.RED));
             return;
@@ -48,13 +50,23 @@ public record Promote(PluginConfig config, DataBaseHelper connection) implements
 
         if (CompareRanks.compareRanks(factionPlayer.rank, otherFactionPlayer.rank)) {
             if (otherFactionPlayer.rank == PlayerRank.Member) {
-                connection.updateFactionMemberRank(otherPlayer.getUniqueId(), PlayerRank.Elder);
-                player.sendMessage(Component.text(String.format("%s has been promoted to Elder!", otherPlayer.getName()), NamedTextColor.GREEN));
-                otherPlayer.sendMessage(Component.text("You have been promoted to Elder!", NamedTextColor.GREEN));
+                connection.updateFactionMemberRank(otherPlayerId, PlayerRank.Elder);
+                player.sendMessage(Component.text(String.format("%s has been promoted to Elder!", maybeOtherPlayer.getName()), NamedTextColor.GREEN));
+                if (maybeOtherPlayer.isConnected()) {
+                    Player otherPlayer = maybeOtherPlayer.getPlayer();
+                    if (otherPlayer != null) {
+                        otherPlayer.sendMessage(Component.text("You have been promoted to Elder!", NamedTextColor.GREEN));
+                    }
+                }
             } else if (otherFactionPlayer.rank == PlayerRank.Elder) {
-                connection.updateFactionMemberRank(otherPlayer.getUniqueId(), PlayerRank.CoOwner);
-                player.sendMessage(Component.text(String.format("%s has been promoted to Co-Owner!", otherPlayer.getName()), NamedTextColor.GREEN));
-                otherPlayer.sendMessage(Component.text("You have been promoted to Co-Owner!", NamedTextColor.GREEN));
+                connection.updateFactionMemberRank(otherPlayerId, PlayerRank.CoOwner);
+                player.sendMessage(Component.text(String.format("%s has been promoted to Co-Owner!", maybeOtherPlayer.getName()), NamedTextColor.GREEN));
+                if (maybeOtherPlayer.isConnected()) {
+                    Player otherPlayer = maybeOtherPlayer.getPlayer();
+                    if (otherPlayer != null) {
+                        otherPlayer.sendMessage(Component.text("You have been promoted to Co-Owner!", NamedTextColor.GREEN));
+                    }
+                }
             }
         } else {
             player.sendMessage(Component.text("You are not a high enough rank to promote that player.", NamedTextColor.RED));

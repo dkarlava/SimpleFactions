@@ -4,6 +4,7 @@ import daveiiii.simpleFactions.data.DataBaseHelper;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import types.FactionPlayer;
@@ -27,13 +28,13 @@ public record Kick(PluginConfig config, DataBaseHelper connection) implements Ba
         }
         String otherPlayerName = args[0];
         UUID playerId = player.getUniqueId();
-        Player otherPlayer = Bukkit.getPlayer(otherPlayerName);
-        if (otherPlayer == null) {
+        OfflinePlayer maybeOtherPlayer = Bukkit.getOfflinePlayer(otherPlayerName.toLowerCase());
+        if (!maybeOtherPlayer.hasPlayedBefore()) {
             // TODO: Error?
             return;
         }
 
-        UUID otherPlayerId = otherPlayer.getUniqueId();
+        UUID otherPlayerId = maybeOtherPlayer.getUniqueId();
         FactionPlayer factionPlayer = connection.selectFactionPlayerMember(playerId);
 
         if (factionPlayer == null) {
@@ -55,7 +56,12 @@ public record Kick(PluginConfig config, DataBaseHelper connection) implements Ba
         // returns true only if the first rank given is HIGHER than the second rank
         if (CompareRanks.compareRanks(factionPlayer.rank, otherFactionPlayer.rank)) {
             connection.deleteFactionMember(otherPlayerId);
-            otherPlayer.sendMessage(Component.text("You have been kicked from the faction!", NamedTextColor.RED));
+            if (maybeOtherPlayer.isConnected()) {
+                Player otherPlayer = maybeOtherPlayer.getPlayer();
+                if (otherPlayer != null) {
+                    otherPlayer.sendMessage(Component.text("You have been kicked from the faction!", NamedTextColor.RED));
+                }
+            }
             BroadcastMessageToFactionMembers.run(connection, factionPlayer.factionId, Component.text(String.format("%s has been kicked from the faction!", otherPlayerName), NamedTextColor.RED));
         } else {
             sender.sendMessage(Component.text("You do not have the power to kick that player.", NamedTextColor.RED));

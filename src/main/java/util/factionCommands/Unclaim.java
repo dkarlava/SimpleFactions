@@ -11,8 +11,9 @@ import util.BaseFactionCommand;
 import util.other.BroadcastMessageToFactionMembers;
 import java.sql.SQLException;
 import java.util.Objects;
+import java.util.logging.Logger;
 
-public record Unclaim(PluginConfig config, DataBaseHelper connection) implements BaseFactionCommand {
+public record Unclaim(PluginConfig config, DataBaseHelper connection, Logger logger) implements BaseFactionCommand {
     @Override
     public void execute(CommandSender sender, String[] args) throws SQLException {
         if (!(sender instanceof Player player)) {
@@ -135,11 +136,17 @@ public record Unclaim(PluginConfig config, DataBaseHelper connection) implements
             return;
         }
         if (Objects.equals(factionChunk.factionId, factionPlayer.factionId)) {
+            int fHomeChunkX = -1;
+            int fHomeChunkZ = -1;
+            FactionHome fHome = connection.selectFactionHome(factionChunk.factionId);
+            if (fHome != null) {
+                fHomeChunkX = (int) Math.floor(fHome.x / 16.0);
+                fHomeChunkZ = (int) Math.floor(fHome.z / 16.0);
+            }
             if (radius == 0) {
                 connection.deleteFactionChunk(centerX, centerZ);
-                FactionHome fHome = connection.selectFactionHome(factionChunk.factionId);
-                if (fHome != null && fHome.x == chunk.getX() && fHome.y == chunk.getZ()) {
-                   connection.updateFactionHomeUnset(factionPlayer.factionId);
+                if (fHomeChunkX == chunk.getX() && fHomeChunkZ == chunk.getZ()) {
+                    connection.updateFactionHomeUnset(factionPlayer.factionId);
                 }
             } else {
                 for (int x = centerX - radius; x <= centerX + radius; x++) {
@@ -147,8 +154,8 @@ public record Unclaim(PluginConfig config, DataBaseHelper connection) implements
                         FactionChunk radiusChunk = connection.selectFactionUsingChunk(x, z);
                         if (Objects.equals(radiusChunk.factionId, factionPlayer.factionId)) {
                             connection.deleteFactionChunk(x, z);
-                            FactionHome fHome = connection.selectFactionHome(factionChunk.factionId);
-                            if (fHome != null && fHome.x == chunk.getX() && fHome.y == chunk.getZ()) {
+                            logger.info(String.format("%d %d ... %d %d", fHomeChunkX, fHomeChunkZ, chunk.getX(), chunk.getZ()));
+                            if (fHomeChunkX == chunk.getX() && fHomeChunkZ == chunk.getZ()) {
                                 connection.updateFactionHomeUnset(factionPlayer.factionId);
                             }
                         }
