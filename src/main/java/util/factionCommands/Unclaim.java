@@ -6,10 +6,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Chunk;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import types.FactionChunk;
-import types.FactionPlayer;
-import types.PlayerRank;
-import types.PluginConfig;
+import types.*;
 import util.BaseFactionCommand;
 import util.other.BroadcastMessageToFactionMembers;
 import java.sql.SQLException;
@@ -101,7 +98,7 @@ public record Unclaim(PluginConfig config, DataBaseHelper connection) implements
 
         FactionPlayer factionPlayer = connection.selectFactionPlayerMember(player.getUniqueId());
         if (factionPlayer == null) {
-            sender.sendMessage(Component.text("You must be in a faction to claim land", NamedTextColor.RED));
+            sender.sendMessage(Component.text("You must be in a faction to unclaim land", NamedTextColor.RED));
             return;
         }
 
@@ -140,12 +137,20 @@ public record Unclaim(PluginConfig config, DataBaseHelper connection) implements
         if (Objects.equals(factionChunk.factionId, factionPlayer.factionId)) {
             if (radius == 0) {
                 connection.deleteFactionChunk(centerX, centerZ);
+                FactionHome fHome = connection.selectFactionHome(factionChunk.factionId);
+                if (fHome != null && fHome.x == chunk.getX() && fHome.y == chunk.getZ()) {
+                   connection.updateFactionHomeUnset(factionPlayer.factionId);
+                }
             } else {
                 for (int x = centerX - radius; x <= centerX + radius; x++) {
                     for (int z = centerZ - radius; z <= centerZ + radius; z++) {
                         FactionChunk radiusChunk = connection.selectFactionUsingChunk(x, z);
                         if (Objects.equals(radiusChunk.factionId, factionPlayer.factionId)) {
                             connection.deleteFactionChunk(x, z);
+                            FactionHome fHome = connection.selectFactionHome(factionChunk.factionId);
+                            if (fHome != null && fHome.x == chunk.getX() && fHome.y == chunk.getZ()) {
+                                connection.updateFactionHomeUnset(factionPlayer.factionId);
+                            }
                         }
                     }
                 }

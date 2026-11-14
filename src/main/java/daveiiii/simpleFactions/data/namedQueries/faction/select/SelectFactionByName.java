@@ -13,7 +13,8 @@ public class SelectFactionByName extends BaseQuery {
         String[] queryItems = {
                 "SELECT id, name",
                 "FROM faction",
-                "WHERE name_unique = ?",
+                "WHERE name_unique LIKE ?",
+                "LIMIT 1",
         };
         String query = BaseQuery.createQuery(queryItems);
         try (PreparedStatement stmt = connection.prepareStatement(query)) {

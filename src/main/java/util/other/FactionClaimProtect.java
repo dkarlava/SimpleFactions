@@ -7,10 +7,12 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.block.*;
 import org.bukkit.event.entity.*;
+import types.Faction;
 import types.FactionChunk;
 import types.PluginConfig;
 
 import java.sql.SQLException;
+import java.util.Objects;
 import java.util.logging.Logger;
 
 public class FactionClaimProtect {
@@ -52,58 +54,46 @@ public class FactionClaimProtect {
         }
 
         if (!allowSafezone && fChunk.factionName.equalsIgnoreCase("safezone")) {
+            // dont allow action if allowSafezone is false
             if (requiresPlayer) {
                 if (!initiator.isOp()) {
                     ((Cancellable) event).setCancelled(true);
                     if (pluginConfig.debug) {
                         logger.warning(String.format("Canceling %s because safezone.", event.getEventName()));
                     }
-                    return;
                 }
             } else {
                 ((Cancellable) event).setCancelled(true);
                 if (pluginConfig.debug) {
                     logger.warning(String.format("Canceling %s because safezone.", event.getEventName()));
                 }
-                return;
             }
-        }
-
-        if (!allowWarzone && fChunk.factionName.equalsIgnoreCase("warzone")) {
+        } else if (!allowWarzone && fChunk.factionName.equalsIgnoreCase("warzone")) {
+            // dont allow action if allowWarzone is false
             if (requiresPlayer) {
                 if (!initiator.isOp()) {
                     ((Cancellable) event).setCancelled(true);
                     if (pluginConfig.debug) {
                         logger.warning(String.format("Canceling %s because warzone.", event.getEventName()));
                     }
-                    return;
                 }
             } else {
                 ((Cancellable) event).setCancelled(true);
                 if (pluginConfig.debug) {
                     logger.warning(String.format("Canceling %s because warzone.", event.getEventName()));
                 }
-                return;
             }
-        }
-
-        if (!allowFactionClaim && !fChunk.factionName.equalsIgnoreCase("safezone") && !fChunk.factionName.equalsIgnoreCase("warzone")) {
-            if (requiresPlayer) {
-                handleRequiresPlayerFactionClaim(initiator, event);
-            } else {
-                ((Cancellable) event).setCancelled(true);
-                if (pluginConfig.debug) {
-                    logger.warning(String.format("Canceling %s because chunk is claimed.", event.getEventName()));
+        } else {
+            Faction playerFaction = connection.selectFactionByPlayerId(initiator.getUniqueId());
+            // player is attempting to preform an action that is not part of their claim. Prevent it if allowFactionClaim is false
+            // otherwise, the player is part of the faction so allow the action
+            if  (playerFaction == null || !Objects.equals(playerFaction.id, fChunk.factionId)) {
+                if (!allowFactionClaim && !initiator.isOp()) {
+                    ((Cancellable) event).setCancelled(true);
+                    if (pluginConfig.debug) {
+                        logger.warning(String.format("Canceling %s because chunk is claimed.", event.getEventName()));
+                    }
                 }
-            }
-        }
-    }
-
-    private void handleRequiresPlayerFactionClaim (Player initiator, Event event) {
-        if (!initiator.isOp()) {
-            ((Cancellable) event).setCancelled(true);
-            if (pluginConfig.debug) {
-                logger.warning(String.format("Canceling %s because chunk is claimed.", event.getEventName()));
             }
         }
     }

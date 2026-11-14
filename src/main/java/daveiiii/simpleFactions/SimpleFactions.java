@@ -185,6 +185,27 @@ public final class SimpleFactions extends JavaPlugin implements Listener {
     }
 
     @EventHandler
+    public void onPlayerDamage(EntityDamageByEntityEvent event) throws SQLException {
+
+        if (!(event.getEntity() instanceof Player victim)) {
+            return;
+        }
+
+        if (!(event.getDamager() instanceof Player attacker)) {
+            return;
+        }
+
+        // Get both players' faction IDs
+        Faction victimFaction = db.selectFactionByPlayerId(victim.getUniqueId());
+        Faction attackerFaction = db.selectFactionByPlayerId(attacker.getUniqueId());
+
+        // prevent faction on faction damage
+        if (victimFaction != null && attackerFaction != null && victimFaction.id.equals(attackerFaction.id)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
     public void onBlockDamageEvent (BlockDamageEvent event) throws SQLException {
         factionClaimProtect.run(event, event.getBlock().getChunk(), event.getPlayer(), false, false, true, true);
     }
@@ -442,7 +463,7 @@ public final class SimpleFactions extends JavaPlugin implements Listener {
                 message,
                 viewer
             );
-            if (viewer instanceof Player playerViewer && !factionPlayers.isEmpty() && factionPlayers.contains(playerViewer.getUniqueId())) {
+            if (factionPlayers != null && viewer instanceof Player playerViewer && !factionPlayers.isEmpty() && factionPlayers.contains(playerViewer.getUniqueId())) {
                 String plainText = PlainTextComponentSerializer.plainText()
                         .serialize(formattedMessage);
 

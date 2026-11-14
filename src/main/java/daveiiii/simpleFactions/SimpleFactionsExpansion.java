@@ -59,7 +59,7 @@ public class SimpleFactionsExpansion extends PlaceholderExpansion {
                         case Elder -> "*";
                         default -> "";
                     };
-                    String displayName = String.format("%s%s", prefix, factionPlayer.factionName);
+                    String displayName = String.format("%s%s ", prefix, factionPlayer.factionName);
                     return displayName;
                 }
             } catch (SQLException e) {
