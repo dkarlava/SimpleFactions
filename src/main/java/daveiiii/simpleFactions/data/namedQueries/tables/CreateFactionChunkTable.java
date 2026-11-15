@@ -10,9 +10,10 @@ public class CreateFactionChunkTable {
             CREATE TABLE IF NOT EXISTS faction_chunk (
                 id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
                 faction_id TEXT NOT NULL,
+                world_id TEXT NOT NULL,
                 x INTEGER NOT NULL,
                 z INTEGER NOT NULL,
-                UNIQUE (x, z),
+                UNIQUE (x, z, world_id),
                 FOREIGN KEY (faction_id) REFERENCES faction(id)
                     ON DELETE CASCADE
                     ON UPDATE CASCADE

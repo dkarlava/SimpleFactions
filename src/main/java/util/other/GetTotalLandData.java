@@ -25,7 +25,7 @@ public class GetTotalLandData {
         for (FactionPlayer overclaimfactionPlayer : factionPlayers) {
             totalPower = totalPower + overclaimfactionPlayer.power;
         }
-        int numberOfAllClaims = connection.selectAllFactionClaims(factionId).size();
+        int numberOfAllClaims = connection.selectNumberOfFactionClaims(factionId);
         return new GetTotalLandDataReturn(totalPower, numberOfAllClaims);
     }
 }

@@ -8,7 +8,7 @@ import daveiiii.simpleFactions.data.namedQueries.factionChunk.create.CreateFacti
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.create.CreateFactionSafeZoneWarZoneChunk;
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.delete.DeleteAllFactionLand;
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.delete.DeleteFactionChunk;
-import daveiiii.simpleFactions.data.namedQueries.factionChunk.select.SelectAllFactionClaims;
+import daveiiii.simpleFactions.data.namedQueries.factionChunk.select.SelectNumberOfFactionClaims;
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.select.SelectFactionUsingChunk;
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.select.SelectNearbyChunks;
 import daveiiii.simpleFactions.data.namedQueries.factionChunk.update.UpdateFactionChunk;
@@ -169,36 +169,36 @@ public class DataBaseHelper {
         return SelectAllFactionMemberIdsUsingPlayerId.run(connection, playerId);
     }
 
-    public void createFactionChunk (String factionId, int x, int z) throws SQLException {
-        CreateFactionChunk.run(connection, factionId, x, z);
+    public void createFactionChunk (String factionId, int x, int z, UUID worldId) throws SQLException {
+        CreateFactionChunk.run(connection, factionId, x, z, worldId);
     }
 
-    public void createFactionSafezoneChunk (int x, int z) throws SQLException {
-        CreateFactionSafeZoneWarZoneChunk.run(connection, "safezone", x, z);
+    public void createFactionSafezoneChunk (int x, int z, UUID worldId) throws SQLException {
+        CreateFactionSafeZoneWarZoneChunk.run(connection, "safezone", x, z, worldId);
     }
 
-    public void createFactionWarzoneChunk (int x, int z) throws SQLException {
-        CreateFactionSafeZoneWarZoneChunk.run(connection, "warzone", x, z);
+    public void createFactionWarzoneChunk (int x, int z, UUID worldId) throws SQLException {
+        CreateFactionSafeZoneWarZoneChunk.run(connection, "warzone", x, z, worldId);
     }
 
-    public Map<String, FactionChunk> selectNearbyChunks(int minX, int maxX, int minZ, int maxZ) throws SQLException {
-        return SelectNearbyChunks.run(connection, minX, maxX, minZ, maxZ);
+    public Map<String, FactionChunk> selectNearbyChunks(int minX, int maxX, int minZ, int maxZ, UUID worldId) throws SQLException {
+        return SelectNearbyChunks.run(connection, minX, maxX, minZ, maxZ, worldId);
     }
 
-    public FactionChunk selectFactionUsingChunk(int x, int z) throws SQLException {
-        return SelectFactionUsingChunk.run(connection, x, z);
+    public FactionChunk selectFactionUsingChunk(int x, int z, UUID worldId) throws SQLException {
+        return SelectFactionUsingChunk.run(connection, x, z, worldId);
     }
 
-    public void deleteFactionChunk (int x, int z) throws SQLException {
-        DeleteFactionChunk.run(connection, x, z);
+    public void deleteFactionChunk (int x, int z, UUID worldId) throws SQLException {
+        DeleteFactionChunk.run(connection, x, z, worldId);
     }
 
     public void updatePlayerPower (UUID playerId, int newPower) throws SQLException {
         UpdatePlayerPower.run(connection, playerId, newPower);
     }
 
-    public List<FactionChunk> selectAllFactionClaims (String factionId) throws SQLException {
-        return SelectAllFactionClaims.run(connection, factionId);
+    public int selectNumberOfFactionClaims (String factionId) throws SQLException {
+        return SelectNumberOfFactionClaims.run(connection, factionId);
     }
 
     public void updatePlayerDataAutoMap (UUID playerId, boolean autoMap) throws SQLException {
@@ -209,20 +209,20 @@ public class DataBaseHelper {
         return SelectPlayerDataAutoMap.run(connection, playerId);
     }
 
-    public void updateFactionChunk (String factionId, int x, int z) throws SQLException {
-        UpdateFactionChunk.run(connection, factionId, x, z);
+    public void updateFactionChunk (String factionId, int x, int z, UUID worldId) throws SQLException {
+        UpdateFactionChunk.run(connection, factionId, x, z, worldId);
     }
 
     public Faction selectFaction (String factionId) throws SQLException {
         return SelectFaction.run(connection, factionId);
     }
 
-    public void updateFactionSafezoneChunk (int x, int z) throws SQLException {
-        UpdateFactionSafeZoneWarZoneChunk.run(connection, "safezone", x, z);
+    public void updateFactionSafezoneChunk (int x, int z, UUID worldId) throws SQLException {
+        UpdateFactionSafeZoneWarZoneChunk.run(connection, "safezone", x, z, worldId);
     }
 
-    public void updateFactionWarzoneChunk (int x, int z) throws SQLException {
-        UpdateFactionSafeZoneWarZoneChunk.run(connection, "warzone", x, z);
+    public void updateFactionWarzoneChunk (int x, int z, UUID worldId) throws SQLException {
+        UpdateFactionSafeZoneWarZoneChunk.run(connection, "warzone", x, z, worldId);
     }
 
     public void deleteAllFactionLand (String factionId) throws SQLException {

@@ -7,23 +7,24 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
-public class SelectAllFactionClaims {
-    public static List<FactionChunk> run (Connection connection, String factionId) throws SQLException {
+// this one is weird
+public class SelectNumberOfFactionClaims {
+    public static int run (Connection connection, String factionId) throws SQLException {
         String query = """
-            SELECT fc.faction_id, fc.x, fc.z, f.name
+            SELECT COUNT(*)
             FROM faction_chunk fc
             JOIN faction f ON fc.faction_id = f.id
             WHERE faction_id = ?
         """;
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, factionId);
+
             try (ResultSet rs = stmt.executeQuery()) {
-                List<FactionChunk> ret = new ArrayList<>();
-                while (rs.next()) {
-                    ret.add(new FactionChunk(rs.getString("faction_id"), rs.getInt("x"), rs.getInt("z"), rs.getString("name")));
+                if (rs.next()) {
+                    return rs.getInt(1);
                 }
-                return ret;
+
+                return -1;
             }
         }
     }

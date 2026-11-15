@@ -13,6 +13,7 @@ import types.PluginConfig;
 
 import java.sql.SQLException;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 public class FactionClaimProtect {
@@ -27,7 +28,7 @@ public class FactionClaimProtect {
         this.connection = connection;
     }
 
-    public void run (Event event, Chunk chunkBeingModified, Player initiator, boolean allowWarzone, boolean allowSafezone, boolean allowFactionClaim, boolean requiresPlayer) throws SQLException {
+    public void run (Event event, Chunk chunkBeingModified, Player initiator, boolean allowWarzone, boolean allowSafezone, boolean allowFactionClaim, boolean requiresPlayer, UUID worldId) throws SQLException {
         if (!(event instanceof Cancellable)) {
             logger.info(String.format("Event %s is not cancellable.", event.getEventName()));
             return;
@@ -45,7 +46,7 @@ public class FactionClaimProtect {
             return;
         }
 
-        FactionChunk fChunk = connection.selectFactionUsingChunk(chunkBeingModified.getX(), chunkBeingModified.getZ());
+        FactionChunk fChunk = connection.selectFactionUsingChunk(chunkBeingModified.getX(), chunkBeingModified.getZ(), worldId);
         if (fChunk == null) {
             if (pluginConfig.debug) {
                 logger.info(String.format("Allowing %s because of no zone claim.", event.getEventName()));

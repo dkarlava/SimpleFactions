@@ -13,9 +13,11 @@ import util.other.GetTotalLandData;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
+import java.util.logging.Logger;
 
 // TODO: claim and unclaim radius get weird if there are other claims in the radius
-public record Claim(PluginConfig config, DataBaseHelper connection) implements BaseFactionCommand {
+public record Claim(PluginConfig config, DataBaseHelper connection, Logger logger) implements BaseFactionCommand {
     @Override
     public void execute(CommandSender sender, String[] args) throws SQLException {
         if (!(sender instanceof Player player)) {
@@ -30,14 +32,16 @@ public record Claim(PluginConfig config, DataBaseHelper connection) implements B
         Chunk chunk = player.getChunk();
         int centerX = chunk.getX();
         int centerZ = chunk.getZ();
+        UUID worldId = player.getWorld().getUID();
 
         if (args.length > 1) {
-            if (args[0].equalsIgnoreCase("safezone") || args[0].equalsIgnoreCase("warzone")) {
+            String safeZoneWarZoneName = args[0];
+            if (safeZoneWarZoneName.equalsIgnoreCase("safezone") || safeZoneWarZoneName.equalsIgnoreCase("warzone")) {
                 if (!player.isOp()) {
                     // only oped players can claim for warzone/ safezone
                     return;
                 }
-                String safeZoneWarZoneName = args[0];
+
                 int radius = 0;
                 try {
                     radius = Integer.parseInt(args[1]);
@@ -47,49 +51,33 @@ public record Claim(PluginConfig config, DataBaseHelper connection) implements B
                 if (safeZoneWarZoneName.equalsIgnoreCase("safezone")) {
                     try {
                         if (radius == 0) {
-                            connection.createFactionSafezoneChunk(centerX, centerZ);
+                            connection.createFactionSafezoneChunk(centerX, centerZ, worldId);
                         } else {
                             for (int x = centerX - radius; x <= centerX + radius; x++) {
                                 for (int z = centerZ - radius; z <= centerZ + radius; z++) {
-                                    connection.createFactionSafezoneChunk(x, z);
+                                    connection.createFactionSafezoneChunk(x, z, worldId);
                                 }
                             }
                         }
+                        player.sendMessage(Component.text("You claimed land for the safe zone!", NamedTextColor.GOLD));
                     } catch (SQLException e) {
-                        if (radius == 0) {
-                            connection.updateFactionSafezoneChunk(centerX, centerZ);
-                        } else {
-                            for (int x = centerX - radius; x <= centerX + radius; x++) {
-                                for (int z = centerZ - radius; z <= centerZ + radius; z++) {
-                                    connection.updateFactionSafezoneChunk(x, z);
-                                }
-                            }
-                        }
+                        logger.warning(String.format("Failed to claim land for safezone. Failed with error: %s", e.getMessage()));
                     }
-                    player.sendMessage(Component.text("You claimed land for the safe zone!", NamedTextColor.GOLD));
                 } else if (safeZoneWarZoneName.equalsIgnoreCase("warzone")) {
                     try {
                         if (radius == 0) {
-                            connection.createFactionWarzoneChunk(centerX, centerZ);
+                            connection.createFactionWarzoneChunk(centerX, centerZ, worldId);
                         } else {
                             for (int x = centerX - radius; x <= centerX + radius; x++) {
                                 for (int z = centerZ - radius; z <= centerZ + radius; z++) {
-                                    connection.createFactionWarzoneChunk(x, z);
+                                    connection.createFactionWarzoneChunk(x, z, worldId);
                                 }
                             }
                         }
+                        player.sendMessage(Component.text("You claimed land for the warzone!", NamedTextColor.DARK_RED));
                     } catch (SQLException e) {
-                        if (radius == 0) {
-                            connection.updateFactionWarzoneChunk(centerX, centerZ);
-                        } else {
-                            for (int x = centerX - radius; x <= centerX + radius; x++) {
-                                for (int z = centerZ - radius; z <= centerZ + radius; z++) {
-                                    connection.updateFactionWarzoneChunk(x, z);
-                                }
-                            }
-                        }
+                        logger.warning(String.format("Failed to claim land for warzone. Failed with error: %s", e.getMessage()));
                     }
-                    player.sendMessage(Component.text("You claimed land for the warzone!", NamedTextColor.DARK_RED));
                 }
                 return;
             }
@@ -113,7 +101,7 @@ public record Claim(PluginConfig config, DataBaseHelper connection) implements B
             return;
         }
 
-        FactionChunk factionChunk = connection.selectFactionUsingChunk(centerX, centerZ);
+        FactionChunk factionChunk = connection.selectFactionUsingChunk(centerX, centerZ, worldId);
         if (factionChunk != null) {
             if (factionChunk.factionName.equalsIgnoreCase("safezone")) {
                 sender.sendMessage(Component.text("You cannot claim the safezone.", NamedTextColor.RED));
@@ -133,20 +121,20 @@ public record Claim(PluginConfig config, DataBaseHelper connection) implements B
                         return;
                     }
 
-                    Map<String, FactionChunk> nearbyChunks = connection.selectNearbyChunks(centerX - 1, centerX + 1, centerZ - 1, centerZ + 1);
+                    Map<String, FactionChunk> nearbyChunks = connection.selectNearbyChunks(centerX - 1, centerX + 1, centerZ - 1, centerZ + 1, worldId);
                     if (nearbyChunks.isEmpty()) {
                         sender.sendMessage(Component.text("Internal Error. Adjacent claim list is empty.", NamedTextColor.RED));
                         return;
                     }
                     // If nearby chunks does not equal 9 that means that at least one nearby chunk is unclaimed so we can allow the overclaim.
                     if (nearbyChunks.size() != 9) {
-                        Claim.claimLand(connection, factionPlayer.factionId, centerX, centerZ, config.factionLandClaimCost, player, factionChunk.factionId);
+                        Claim.claimLand(connection, factionPlayer.factionId, centerX, centerZ, config.factionLandClaimCost, player, factionChunk.factionId, worldId);
                         return;
                     }
 
                     for (Map.Entry<String, FactionChunk> nearbyChunk : nearbyChunks.entrySet()) {
                         if  (!nearbyChunk.getValue().factionId.equalsIgnoreCase(factionChunk.factionId)) {
-                            Claim.claimLand(connection, factionPlayer.factionId, centerX, centerZ, config.factionLandClaimCost, player, factionChunk.factionId);
+                            Claim.claimLand(connection, factionPlayer.factionId, centerX, centerZ, config.factionLandClaimCost, player, factionChunk.factionId, worldId);
                             return;
                         }
                     }
@@ -165,33 +153,33 @@ public record Claim(PluginConfig config, DataBaseHelper connection) implements B
         }
 
         if (radius == 0) {
-            Claim.claimLand(connection, factionPlayer.factionId, centerX, centerZ, config.factionLandClaimCost, player, null);
+            Claim.claimLand(connection, factionPlayer.factionId, centerX, centerZ, config.factionLandClaimCost, player, null, worldId);
         } else {
             for (int x = centerX - radius; x <= centerX + radius; x++) {
                 for (int z = centerZ - radius; z <= centerZ + radius; z++) {
-                    FactionChunk radiusChunk = connection.selectFactionUsingChunk(centerX, centerZ);
+                    FactionChunk radiusChunk = connection.selectFactionUsingChunk(centerX, centerZ, worldId);
                     if (radiusChunk == null) {
-                        Claim.claimLand(connection, factionPlayer.factionId, x, z, config.factionLandClaimCost, player, null);
+                        Claim.claimLand(connection, factionPlayer.factionId, x, z, config.factionLandClaimCost, player, null, worldId);
                     }
                 }
             }
         }
     }
-    public static void claimLand (DataBaseHelper connection, String factionId, int x, int z, int claimCost, Player claimer, String overClaimedFactionId) throws SQLException {
+    public static void claimLand (DataBaseHelper connection, String factionId, int x, int z, int claimCost, Player claimer, String overClaimedFactionId, UUID worldId) throws SQLException {
         GetTotalLandData.GetTotalLandDataReturn claimData = GetTotalLandData.run(connection, factionId);
         if (claimData.totalPower - claimData.totalLand < claimCost) {
             claimer.sendMessage(Component.text("Your faction does not have enough power to claim this land", NamedTextColor.RED));
             return;
         }
         if (overClaimedFactionId != null) {
-            connection.updateFactionChunk(factionId, x, z);
+            connection.updateFactionChunk(factionId, x, z, claimer.getWorld().getUID());
             Faction overclaimedFaction = connection.selectFaction(overClaimedFactionId);
             BroadcastMessageToFactionMembers.run(connection, factionId, Component.text(String.format("%s just claimed land from %s", claimer.getName(), overclaimedFaction.name), NamedTextColor.GREEN));
             Faction claimingFaction = connection.selectFactionByPlayerId(claimer.getUniqueId());
             BroadcastMessageToFactionMembers.run(connection, overclaimedFaction.id, Component.text(String.format("Your faction just lost a land claim at (%d, %d)! to %s", x, z, claimingFaction.name), NamedTextColor.GREEN));
         } else {
             BroadcastMessageToFactionMembers.run(connection, factionId, Component.text(String.format("%s just claimed land for the faction!", claimer.getName()), NamedTextColor.GREEN));
-            connection.createFactionChunk(factionId, x, z);
+            connection.createFactionChunk(factionId, x, z, worldId);
         }
     }
 }

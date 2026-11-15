@@ -35,7 +35,7 @@ public record SetHome(PluginConfig config, DataBaseHelper connection) implements
         }
 
         Chunk chunk = player.getChunk();
-        FactionChunk factionChunk = connection.selectFactionUsingChunk(chunk.getX(),  chunk.getZ());
+        FactionChunk factionChunk = connection.selectFactionUsingChunk(chunk.getX(),  chunk.getZ(), player.getWorld().getUID());
         if (factionChunk == null || !factionChunk.factionId.equals(factionPlayer.factionId)) {
             sender.sendMessage(Component.text("You cannot set the faction home here.", NamedTextColor.RED));
             return;

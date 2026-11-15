@@ -11,6 +11,7 @@ import util.BaseFactionCommand;
 import util.other.BroadcastMessageToFactionMembers;
 import java.sql.SQLException;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 public record Unclaim(PluginConfig config, DataBaseHelper connection, Logger logger) implements BaseFactionCommand {
@@ -27,6 +28,7 @@ public record Unclaim(PluginConfig config, DataBaseHelper connection, Logger log
         Chunk chunk = player.getChunk();
         int centerX = chunk.getX();
         int centerZ = chunk.getZ();
+        UUID worldId = player.getWorld().getUID();
 
         if (args.length > 1) {
             if (args[0].equalsIgnoreCase("safezone") || args[0].equalsIgnoreCase("warzone")) {
@@ -44,21 +46,21 @@ public record Unclaim(PluginConfig config, DataBaseHelper connection, Logger log
                 if (safeZoneWarZoneName.equalsIgnoreCase("safezone")) {
                     try {
                         if (radius == 0) {
-                            connection.deleteFactionChunk(centerX, centerZ);
+                            connection.deleteFactionChunk(centerX, centerZ, worldId);
                         } else {
                             for (int x = centerX - radius; x <= centerX + radius; x++) {
                                 for (int z = centerZ - radius; z <= centerZ + radius; z++) {
-                                    connection.deleteFactionChunk(x, z);
+                                    connection.deleteFactionChunk(x, z, worldId);
                                 }
                             }
                         }
                     } catch (SQLException e) {
                         if (radius == 0) {
-                            connection.deleteFactionChunk(centerX, centerZ);
+                            connection.deleteFactionChunk(centerX, centerZ, worldId);
                         } else {
                             for (int x = centerX - radius; x <= centerX + radius; x++) {
                                 for (int z = centerZ - radius; z <= centerZ + radius; z++) {
-                                    connection.deleteFactionChunk(x, z);
+                                    connection.deleteFactionChunk(x, z, worldId);
                                 }
                             }
                         }
@@ -67,21 +69,21 @@ public record Unclaim(PluginConfig config, DataBaseHelper connection, Logger log
                 } else if (safeZoneWarZoneName.equalsIgnoreCase("warzone")) {
                     try {
                         if (radius == 0) {
-                            connection.deleteFactionChunk(centerX, centerZ);
+                            connection.deleteFactionChunk(centerX, centerZ, worldId);
                         } else {
                             for (int x = centerX - radius; x <= centerX + radius; x++) {
                                 for (int z = centerZ - radius; z <= centerZ + radius; z++) {
-                                    connection.deleteFactionChunk(x, z);
+                                    connection.deleteFactionChunk(x, z, worldId);
                                 }
                             }
                         }
                     } catch (SQLException e) {
                         if (radius == 0) {
-                            connection.deleteFactionChunk(centerX, centerZ);
+                            connection.deleteFactionChunk(centerX, centerZ, worldId);
                         } else {
                             for (int x = centerX - radius; x <= centerX + radius; x++) {
                                 for (int z = centerZ - radius; z <= centerZ + radius; z++) {
-                                    connection.deleteFactionChunk(x, z);
+                                    connection.deleteFactionChunk(x, z, worldId);
                                 }
                             }
                         }
@@ -123,7 +125,7 @@ public record Unclaim(PluginConfig config, DataBaseHelper connection, Logger log
             }
         }
 
-        FactionChunk factionChunk = connection.selectFactionUsingChunk(centerX, centerZ);
+        FactionChunk factionChunk = connection.selectFactionUsingChunk(centerX, centerZ, worldId);
         if (factionChunk == null) {
             return;
         }
@@ -144,16 +146,16 @@ public record Unclaim(PluginConfig config, DataBaseHelper connection, Logger log
                 fHomeChunkZ = (int) Math.floor(fHome.z / 16.0);
             }
             if (radius == 0) {
-                connection.deleteFactionChunk(centerX, centerZ);
+                connection.deleteFactionChunk(centerX, centerZ, worldId);
                 if (fHomeChunkX == chunk.getX() && fHomeChunkZ == chunk.getZ()) {
                     connection.updateFactionHomeUnset(factionPlayer.factionId);
                 }
             } else {
                 for (int x = centerX - radius; x <= centerX + radius; x++) {
                     for (int z = centerZ - radius; z <= centerZ + radius; z++) {
-                        FactionChunk radiusChunk = connection.selectFactionUsingChunk(x, z);
+                        FactionChunk radiusChunk = connection.selectFactionUsingChunk(x, z, worldId);
                         if (Objects.equals(radiusChunk.factionId, factionPlayer.factionId)) {
-                            connection.deleteFactionChunk(x, z);
+                            connection.deleteFactionChunk(x, z, worldId);
                             logger.info(String.format("%d %d ... %d %d", fHomeChunkX, fHomeChunkZ, chunk.getX(), chunk.getZ()));
                             if (fHomeChunkX == chunk.getX() && fHomeChunkZ == chunk.getZ()) {
                                 connection.updateFactionHomeUnset(factionPlayer.factionId);

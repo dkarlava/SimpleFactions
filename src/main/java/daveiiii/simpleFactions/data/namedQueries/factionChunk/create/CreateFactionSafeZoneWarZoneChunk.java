@@ -6,9 +6,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.UUID;
 
 public class CreateFactionSafeZoneWarZoneChunk extends BaseQuery {
-    public static void run (Connection connection, String factionName, int x, int z) throws SQLException {
+    public static void run (Connection connection, String factionName, int x, int z, UUID worldId) throws SQLException {
         try {
             connection.setAutoCommit(false);
             String getSafeZoneFactionIdQuery = """
@@ -26,12 +27,19 @@ public class CreateFactionSafeZoneWarZoneChunk extends BaseQuery {
             }
 
             String query = """
-                INSERT INTO faction_chunk (faction_id, x, z) VALUES (?, ?, ?) RETURNING id;
+                INSERT INTO faction_chunk (
+                    faction_id,
+                    x,
+                    z,
+                    world_id
+                ) VALUES (?, ?, ?, ?)
+                RETURNING id;
             """;
             try (PreparedStatement stmt = connection.prepareStatement(query)) {
                 stmt.setString(1, String.valueOf(safezoneFactionId));
                 stmt.setInt(2, x);
                 stmt.setInt(3, z);
+                stmt.setString(4, String.valueOf(worldId));
                 stmt.executeQuery();
             }
 

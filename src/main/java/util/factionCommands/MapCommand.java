@@ -12,10 +12,7 @@ import types.FactionChunk;
 import types.PluginConfig;
 import util.BaseFactionCommand;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Random;
+import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -54,6 +51,10 @@ public record MapCommand(PluginConfig config, DataBaseHelper connection, Logger 
         }
 
         Faction playerFaction = connection.selectFactionByPlayerId(player.getUniqueId());
+        String playerFactionName = null;
+        if (playerFaction != null) {
+            playerFactionName = playerFaction.name;
+        }
 
         int chunkX = chunk.getX();
         int chunkZ = chunk.getZ();
@@ -61,9 +62,10 @@ public record MapCommand(PluginConfig config, DataBaseHelper connection, Logger 
         int maxX = chunkX + 23;
         int minZ = chunkZ - 8;
         int maxZ = chunkZ + 7;
+        UUID worldId = player.getWorld().getUID();
 
-        FactionChunk currentChunk = connection.selectFactionUsingChunk(chunkX, chunkZ);
-        Map<String, FactionChunk> nearbyFactionChunks = connection.selectNearbyChunks(minX, maxX, minZ, maxZ);
+        FactionChunk currentChunk = connection.selectFactionUsingChunk(chunkX, chunkZ, worldId);
+        Map<String, FactionChunk> nearbyFactionChunks = connection.selectNearbyChunks(minX, maxX, minZ, maxZ, worldId);
         Map<String, Character> factionSymbols = new HashMap<>();
 
         Component fMap = Component.text("[___________] ", NamedTextColor.GOLD)
@@ -94,7 +96,7 @@ public record MapCommand(PluginConfig config, DataBaseHelper connection, Logger 
                                 claimSymbolIndex = 0;
                             }
                             char symbol = symbols.charAt(claimSymbolIndex);
-                            if (playerFaction.name.equals(factionChunk.factionName)) {
+                            if (playerFactionName != null && playerFactionName.equals(factionChunk.factionName)) {
                                 fMap = fMap.append(Component.text(symbol, NamedTextColor.GREEN));
                             } else {
                                 fMap = fMap.append(Component.text(symbol, NamedTextColor.WHITE));
@@ -103,7 +105,7 @@ public record MapCommand(PluginConfig config, DataBaseHelper connection, Logger 
                             claimSymbolIndex += 1;
                         }
                     } else {
-                        if (playerFaction.name.equals(factionChunk.factionName)) {
+                        if (playerFactionName != null && playerFactionName.equals(factionChunk.factionName)) {
                             fMap = fMap.append(Component.text(factionSymbol, NamedTextColor.GREEN));
                         } else {
                             fMap = fMap.append(Component.text(factionSymbol, NamedTextColor.WHITE));
