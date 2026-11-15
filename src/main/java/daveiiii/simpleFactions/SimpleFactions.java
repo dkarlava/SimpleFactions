@@ -8,8 +8,12 @@ import io.papermc.paper.chat.ChatRenderer;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextReplacementConfig;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
@@ -24,6 +28,7 @@ import org.bukkit.event.player.*;
 import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import types.*;
@@ -44,6 +49,7 @@ import java.util.stream.Collectors;
 public final class SimpleFactions extends JavaPlugin implements Listener {
 
     private Logger logger;
+    private Economy economy;
     private DataBaseHelper db;
     private PluginConfig config;
     private FactionClaimProtect factionClaimProtect;
@@ -60,15 +66,24 @@ public final class SimpleFactions extends JavaPlugin implements Listener {
         this.saveDefaultConfig();
         config = new PluginConfig(getConfig());
 
+        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+
+        if (rsp != null) {
+            economy = rsp.getProvider();
+        } else {
+            getLogger().severe("NO ECONOMY PROVIDER REGISTERED!");
+        }
+
         factionClaimProtect = new FactionClaimProtect (logger, db, config);
         Objects.requireNonNull(this.getCommand("discord")).setExecutor(new DiscordCommandManager(config));
         Objects.requireNonNull(this.getCommand("setenchant")).setExecutor(new EnchantCommandManager(config));
-        Objects.requireNonNull(this.getCommand("f")).setExecutor(new FactionsCommandManager(config, db, logger));
+        Objects.requireNonNull(this.getCommand("f")).setExecutor(new FactionsCommandManager(config, db, logger, economy));
         Objects.requireNonNull(this.getCommand("f")).setTabCompleter(new FactionCommandTabCompleter());
         getServer().getPluginManager().registerEvents(this, this);
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
             new SimpleFactionsExpansion(this, db, logger).register();
         }
+
         initializeRepeatingTasks();
         logger.info("SimpleFactions has been enabled!");
     }
@@ -501,5 +516,31 @@ public final class SimpleFactions extends JavaPlugin implements Listener {
                 }
             }
         }.runTaskTimer(this, config.factionPowerIncreaseInterval * 60 * 20L, config.factionPowerIncreaseInterval * 60 * 20L); // 15 minutes in ticks
+
+        if (config.discordLink != null) {
+            // Discord advertisement every 10 minutes
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    Bukkit.broadcast(
+                        Component.text("Join the Aetherion Discord! Get rewarded for reporting bugs! ")
+                            .color(NamedTextColor.GRAY)
+                            .append(
+                                    Component.text("[CLICK HERE]")
+                                        .color(NamedTextColor.AQUA)
+                                        .decorate(TextDecoration.BOLD)
+                                        .clickEvent(ClickEvent.openUrl(config.discordLink))
+                                        .hoverEvent(HoverEvent.showText(
+                                            Component.text("Click to join our Discord!")
+                                        ))
+                            )
+                    );
+                }
+            }.runTaskTimer(
+                this,
+                20L * 60 * 15,  // Initial delay: 10 minutes
+                20L * 60 * 15   // Repeat every 10 minutes
+            );
+        }
     }
 }

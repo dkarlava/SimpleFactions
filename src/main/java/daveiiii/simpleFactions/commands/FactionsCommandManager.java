@@ -3,6 +3,7 @@ package daveiiii.simpleFactions.commands;
 import daveiiii.simpleFactions.data.DataBaseHelper;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -22,12 +23,12 @@ public class FactionsCommandManager implements CommandExecutor {
     private final Logger logger;
     private final Map<PossibleFactionCommands, BaseFactionCommand> commandMap = new HashMap<>();
 
-    public FactionsCommandManager(PluginConfig config, DataBaseHelper connection, Logger logger) {
+    public FactionsCommandManager(PluginConfig config, DataBaseHelper connection, Logger logger, Economy economy) {
         this.logger = logger;
         commandMap.put(PossibleFactionCommands.Create, new Create(config, connection));
         commandMap.put(PossibleFactionCommands.List, new ListCommand(config, connection));
         commandMap.put(PossibleFactionCommands.Leave, new Leave(config, connection));
-        commandMap.put(PossibleFactionCommands.Show, new Show(config, connection));
+        commandMap.put(PossibleFactionCommands.Show, new Show(config, connection, economy));
         commandMap.put(PossibleFactionCommands.Disband, new Disband(config, connection));
         commandMap.put(PossibleFactionCommands.Invite, new Invite(config, connection));
         commandMap.put(PossibleFactionCommands.Join, new Join(config, connection));

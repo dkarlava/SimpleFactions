@@ -4,6 +4,7 @@ main: daveiiii.simpleFactions.SimpleFactions
 api-version: '1.21'
 depend:
   - Essentials
+  - Vault
 commands:
   f:
     usage: /f <subcommand>
