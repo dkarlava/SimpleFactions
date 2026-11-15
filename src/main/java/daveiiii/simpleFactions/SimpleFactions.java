@@ -16,6 +16,8 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.CreatureSpawner;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -28,6 +30,7 @@ import org.bukkit.event.player.*;
 import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -40,6 +43,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -182,6 +186,67 @@ public final class SimpleFactions extends JavaPlugin implements Listener {
         }
 
         factionClaimProtect.run(event, chunkBeingModified, player, false, false, allowFactionClaim, true, event.getPlayer().getWorld().getUID());
+    }
+
+    @EventHandler
+    public void onCreeperExplode(EntityExplodeEvent event) throws SQLException {
+
+        if (!(event.getEntity() instanceof Creeper)) {
+            return;
+        }
+
+        Chunk chunkBeingModified = event.getLocation().getChunk();
+
+        Iterator<Block> iterator = event.blockList().iterator();
+
+        while (iterator.hasNext()) {
+            Block block = iterator.next();
+
+            if (block.getType() == Material.SPAWNER) {
+                iterator.remove();
+                if (ThreadLocalRandom.current().nextDouble() < 0.75) {
+                    CreatureSpawner spawner = (CreatureSpawner) block.getState();
+                    ItemStack item = new ItemStack(Material.SPAWNER);
+                    BlockStateMeta meta = (BlockStateMeta) item.getItemMeta();
+                    meta.setBlockState(spawner);
+                    item.setItemMeta(meta);
+                    block.getWorld().dropItemNaturally(block.getLocation(), item);
+                }
+                // IMPORTANT: this has to go after the logic above, otherwise the logic above will be applied to air and never drop a spawner
+                block.setType(Material.AIR);
+            }
+        }
+        factionClaimProtect.run(event, chunkBeingModified, null, false, false, true, false, event.getLocation().getWorld().getUID());
+    }
+
+    @EventHandler
+    public void onSpawnerBreak(BlockBreakEvent event) throws SQLException {
+
+        Block block = event.getBlock();
+        Player player = event.getPlayer();
+
+        if (block.getType() != Material.SPAWNER) {
+            return;
+        }
+
+        ItemStack tool = player.getInventory().getItemInMainHand();
+        if (!tool.getType().name().endsWith("_PICKAXE") || tool.getEnchantmentLevel(Enchantment.SILK_TOUCH) < 1) {
+            return;
+        }
+
+        CreatureSpawner spawner = (CreatureSpawner) block.getState();
+
+        ItemStack item = new ItemStack(Material.SPAWNER);
+        BlockStateMeta meta = (BlockStateMeta) item.getItemMeta();
+
+        meta.setBlockState(spawner);
+        item.setItemMeta(meta);
+
+        event.setDropItems(false);
+        event.setExpToDrop(0);
+
+        block.getWorld().dropItemNaturally(block.getLocation(), item);
+        factionClaimProtect.run(event, event.getBlock().getChunk(), player, false, false, false, true, block.getWorld().getUID());
     }
 
     @EventHandler

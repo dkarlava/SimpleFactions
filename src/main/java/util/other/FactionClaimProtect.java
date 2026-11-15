@@ -84,7 +84,10 @@ public class FactionClaimProtect {
                     logger.warning(String.format("Canceling %s because warzone.", event.getEventName()));
                 }
             }
-        } else {
+        } else if (requiresPlayer) {
+            // only block player actions in land claims, all other events are allowed, block spread, creepers, mob spawners
+
+
             Faction playerFaction = connection.selectFactionByPlayerId(initiator.getUniqueId());
             // player is attempting to preform an action that is not part of their claim. Prevent it if allowFactionClaim is false
             // otherwise, the player is part of the faction so allow the action

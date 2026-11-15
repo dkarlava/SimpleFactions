@@ -5,6 +5,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Chunk;
+import org.bukkit.block.BlockFace;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import types.Faction;
@@ -18,6 +19,16 @@ import java.util.stream.Collectors;
 
 public record MapCommand(PluginConfig config, DataBaseHelper connection, Logger logger) implements BaseFactionCommand {
     private static final String symbols = "=#$%&/\\^*~?<>@";
+    private static final String[] directions = {
+            "SOUTH",
+            "SOUTH_WEST",
+            "WEST",
+            "NORTH_WEST",
+            "NORTH",
+            "NORTH_EAST",
+            "EAST",
+            "SOUTH_EAST"
+    };
 
     @Override
     public void execute(CommandSender sender, String[] args) throws SQLException {
@@ -74,41 +85,107 @@ public record MapCommand(PluginConfig config, DataBaseHelper connection, Logger 
             .append(Component.text(" [___________]", NamedTextColor.GOLD))
             .append(Component.text('\n'));
         int claimSymbolIndex = 0;
+        float yaw = player.getLocation().getYaw();
+        int direction = Math.round(yaw / 45f);
+        String facing = directions[Math.floorMod(direction, 8)];
         for (int z = minZ; z < maxZ; z++) {
             for (int x = minX; x < maxX; x++) {
-                String keyLookup = String.format("(%d,%d)", z, x);
-                FactionChunk factionChunk = nearbyFactionChunks.get(keyLookup);
-                if (x == chunkX && z == chunkZ) {
-                    fMap = fMap.append(Component.text('+', NamedTextColor.AQUA));
-                } else if (factionChunk == null) {
-                    fMap = fMap.append(Component.text('-', NamedTextColor.GRAY));
-                } else {
-                    Character factionSymbol = factionSymbols.get(factionChunk.factionName);
-                    if (factionSymbol == null) {
-                        if (Objects.equals(factionChunk.factionName, "SafeZone")) {
-                            fMap = fMap.append(Component.text('+', NamedTextColor.GOLD));
-                        } else if (Objects.equals(factionChunk.factionName, "WarZone")) {
-                            fMap = fMap.append(Component.text('+', NamedTextColor.DARK_RED));
-                        } else {
-                            // if there are more different faction claims than we have characters for we restart the symbol iteration
-                            // I am not really sure how to accommodate this
-                            if (claimSymbolIndex == symbols.length()) {
-                                claimSymbolIndex = 0;
-                            }
-                            char symbol = symbols.charAt(claimSymbolIndex);
-                            if (playerFactionName != null && playerFactionName.equals(factionChunk.factionName)) {
-                                fMap = fMap.append(Component.text(symbol, NamedTextColor.GREEN));
+                // display compass
+                if ((x == minX || x == minX + 1 || x == minX + 2) && (z == minZ || z == minZ + 1 || z == minZ + 2)) {
+                    if (x == minX) {
+                        if (z == minZ) {
+                            if (facing.equals("NORTH_WEST")) {
+                                fMap = fMap.append(Component.text('\\', NamedTextColor.GREEN));
                             } else {
-                                fMap = fMap.append(Component.text(symbol, NamedTextColor.WHITE));
+                                fMap = fMap.append(Component.text('\\', NamedTextColor.GRAY));
                             }
-                            factionSymbols.put(factionChunk.factionName, symbol);
-                            claimSymbolIndex += 1;
+                        } else if (z == minZ + 1) {
+                            if (facing.equals("WEST")) {
+                                fMap = fMap.append(Component.text('W', NamedTextColor.GREEN));
+                            } else {
+                                fMap = fMap.append(Component.text('W', NamedTextColor.GRAY));
+                            }
+                        } else if (z == minZ + 2) {
+                            if (facing.equals("SOUTH_WEST")) {
+                                fMap = fMap.append(Component.text('/', NamedTextColor.GREEN));
+                            } else {
+                                fMap = fMap.append(Component.text('/', NamedTextColor.GRAY));
+                            }
                         }
+                    } else if (x == minX + 1) {
+                        if (z == minZ) {
+                            if (facing.equals("NORTH")) {
+                                fMap = fMap.append(Component.text('N', NamedTextColor.GREEN));
+                            } else {
+                                fMap = fMap.append(Component.text('N', NamedTextColor.GRAY));
+                            }
+                        } else if (z == minZ + 1) {
+                            fMap = fMap.append(Component.text('+', NamedTextColor.GRAY));
+                        } else if (z == minZ + 2) {
+                            if (facing.equals("SOUTH")) {
+                                fMap = fMap.append(Component.text('S', NamedTextColor.GREEN));
+                            } else {
+                                fMap = fMap.append(Component.text('S', NamedTextColor.GRAY));
+                            }
+                        }
+                    } else if (x == minX + 2) {
+                        if (z == minZ) {
+                            if (facing.equals("NORTH_EAST")) {
+                                fMap = fMap.append(Component.text('/', NamedTextColor.GREEN));
+                            } else {
+                                fMap = fMap.append(Component.text('/', NamedTextColor.GRAY));
+                            }
+                        } else if (z == minZ + 1) {
+                            if (facing.equals("EAST")) {
+                                fMap = fMap.append(Component.text('E', NamedTextColor.GREEN));
+                            } else {
+                                fMap = fMap.append(Component.text('E', NamedTextColor.GRAY));
+                            }
+                        } else if (z == minZ + 2) {
+                            if (facing.equals("SOUTH_EAST")) {
+                                fMap = fMap.append(Component.text('\\', NamedTextColor.GREEN));
+                            } else {
+                                fMap = fMap.append(Component.text('\\', NamedTextColor.GRAY));
+                            }
+                        }
+                    }
+                } else {
+                    // everything else
+
+                    String keyLookup = String.format("(%d,%d)", z, x);
+                    FactionChunk factionChunk = nearbyFactionChunks.get(keyLookup);
+                    if (x == chunkX && z == chunkZ) {
+                        fMap = fMap.append(Component.text('+', NamedTextColor.AQUA));
+                    } else if (factionChunk == null) {
+                        fMap = fMap.append(Component.text('-', NamedTextColor.GRAY));
                     } else {
-                        if (playerFactionName != null && playerFactionName.equals(factionChunk.factionName)) {
-                            fMap = fMap.append(Component.text(factionSymbol, NamedTextColor.GREEN));
+                        Character factionSymbol = factionSymbols.get(factionChunk.factionName);
+                        if (factionSymbol == null) {
+                            if (Objects.equals(factionChunk.factionName, "SafeZone")) {
+                                fMap = fMap.append(Component.text('+', NamedTextColor.GOLD));
+                            } else if (Objects.equals(factionChunk.factionName, "WarZone")) {
+                                fMap = fMap.append(Component.text('+', NamedTextColor.DARK_RED));
+                            } else {
+                                // if there are more different faction claims than we have characters for we restart the symbol iteration
+                                // I am not really sure how to accommodate this
+                                if (claimSymbolIndex == symbols.length()) {
+                                    claimSymbolIndex = 0;
+                                }
+                                char symbol = symbols.charAt(claimSymbolIndex);
+                                if (playerFactionName != null && playerFactionName.equals(factionChunk.factionName)) {
+                                    fMap = fMap.append(Component.text(symbol, NamedTextColor.GREEN));
+                                } else {
+                                    fMap = fMap.append(Component.text(symbol, NamedTextColor.WHITE));
+                                }
+                                factionSymbols.put(factionChunk.factionName, symbol);
+                                claimSymbolIndex += 1;
+                            }
                         } else {
-                            fMap = fMap.append(Component.text(factionSymbol, NamedTextColor.WHITE));
+                            if (playerFactionName != null && playerFactionName.equals(factionChunk.factionName)) {
+                                fMap = fMap.append(Component.text(factionSymbol, NamedTextColor.GREEN));
+                            } else {
+                                fMap = fMap.append(Component.text(factionSymbol, NamedTextColor.WHITE));
+                            }
                         }
                     }
                 }
